@@ -89,3 +89,6 @@ presenter/node_modules/
 examples/**/node_modules/
 examples/**/*.db
 !examples/ghost-lite/.sprint-zero/
+
+# Local issue tracker (mattpocock skills)
+.scratch/
