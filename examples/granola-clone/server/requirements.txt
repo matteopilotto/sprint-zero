@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+PyJWT
+bcrypt
+# Loads server/.env if it exists. Optional: the app runs fine without a .env.
+python-dotenv
+# Only used when ANTHROPIC_API_KEY is set. Imported lazily, so local mode never loads it.
+anthropic
