@@ -42,8 +42,10 @@ These apply in every step. Later steps do not repeat them.
 Throughout this file, `<build>` means the build folder. Every path the worker agents know (`docs/`, `server/`, `client/`, `app/`, `cli/`) is relative to it.
 
 - The spec set is `<build>/docs/`. The scope file is `<build>/docs/scope.md`.
-- Issues are `<build>/docs/issues/NN-<slug>.md`. They are committed with the spec set and travel with the build if it is moved.
-- The build notes are `<build>/docs/build-notes.md`: one file per build, committed with the spec set like the issues. See "Build notes" below.
+- Issues are `<build>/docs/issues/NN-<slug>.md`. They are kept with the spec set and travel with the build if it is moved.
+- The build notes are `<build>/docs/build-notes.md`: one file per build, kept with the spec set like the issues. See "Build notes" below.
+
+Whether git tracks any of these depends on the repository's ignore rules. The git check before step 1 finds out and tells the user; do not assume the whole build is committed.
 
 ## Issue files
 
@@ -235,15 +237,25 @@ Run `git -C <build> rev-parse --is-inside-work-tree`.
 
 > `<build>` is not in a git repository, so there will be no restore point if a change goes wrong. Carrying on.
 
-**If it succeeds**, run `git -C <build> status --porcelain -- .` to list the uncommitted changes inside the build folder. Ignored files, such as the database, do not appear and do not count.
+**If it succeeds**, first find out which parts of the build git does not track. Run `git -C <build> check-ignore` with these paths as arguments: each of the build's resolved code directories, and the six spec files `docs/scope.md`, `docs/reference-brief.md`, `docs/prd.md`, `docs/decisions.md`, `docs/user-stories.md`, and `docs/api-contract.md`. It prints every path that is ignored and changes nothing. The kit's own `.gitignore` ignores the code and those six files for a build at the repo root, so there git may see only the issue files and the build notes. Never edit `.gitignore`.
 
-If the list is empty, say nothing and go on to step 1.
+If it prints any path, keep the list for step 8d and tell the user plainly, once:
+
+> Git ignores these parts of the build: <the ignored paths>. They are not tracked, so a commit is not a restore point for them. If you want one, copy the build folder to somewhere outside it before you approve the batch, for example `cp -R <build> <a folder of your choice>`.
+
+Do not wait for a reply to this, and do not make the copy yourself. If nothing is ignored, say nothing about it.
+
+Then run `git -C <build> status --porcelain -- .` to list the uncommitted changes inside the build folder. Ignored files do not appear and do not count.
+
+If the list is empty, go on to step 1.
 
 If it is not empty, print the changed files (the first ten, then "and <count> more" if the list is longer), followed by:
 
 > The build in `<build>` has uncommitted changes. I recommend committing them first, so you have a restore point if this batch goes wrong. I will not commit for you.
 >
 > Commit in another terminal and reply "continue", or reply "continue" to go ahead as things are, or "stop" to end here.
+
+When parts of the build are ignored, add one line to that message: a commit covers only the files git tracks.
 
 Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. `--no-confirm` does not skip this wait: it approves the batch in advance, not the risk to unsaved work. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
 
@@ -712,7 +724,17 @@ If at least one issue of the batch is `built`, and the build is in a git reposit
 > git commit -m "Refinement batch <N>: <the built issues' titles, shortened>"
 > ```
 
-If no issue was built, or the git check found no repository, leave this out.
+Under the commands, say what the commit will and will not capture, using the list of ignored paths from the git check before step 1.
+
+If nothing was ignored:
+
+> This captures every tracked file in the build folder. Files git ignores, such as a local database, are left out.
+
+If some paths were ignored:
+
+> This captures only what git tracks in the build folder: <for example, the issue files and the build notes>. It does not capture <the ignored paths>, because git ignores them, so the commit is not a restore point for those parts. Copy the build folder if you want one.
+
+If no issue was built, or the git check found no repository, leave this step out.
 
 ### 8e. Start the app, or ask before a restart
 
