@@ -678,7 +678,7 @@ Print one row per issue of the batch, then the combined click-through list.
 SPRINT ZERO — REFINEMENT BATCH <N>
 ==================================
 Build: <build>
-Regression: <X/Y existing tests passed against a temporary copy | untested: reason>
+Regression: <X/Y existing tests passed against a temporary copy | untested: reason | N/A: reason>
 
 | #  | Title                         | Status   | What QA checked                                   |
 | -- | ----------------------------- | -------- | ------------------------------------------------- |
