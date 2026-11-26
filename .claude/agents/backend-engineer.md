@@ -113,3 +113,26 @@ Structure your final message as:
 1. The completion sentence above
 2. A bullet summary of what you built (resolved stack/data layer, routes or commands, auth approach, seed behaviour)
 3. Any decisions or deviations worth flagging — including the scope level and config you read and how they shaped the build
+
+## Refinement mode
+
+When your brief says this is a refinement, the build already exists and someone may be using it. Everything above still describes the stack, the data layer, and the contract you work to, but this section replaces "When you are done" and overrides anything above that tells you to build from scratch.
+
+The brief names a build folder and a list of approved issue files. Every path in these instructions (`docs/`, `server/`, `app/`, `cli/`) is relative to that build folder.
+
+1. Read the approved issues you were handed before anything else. Each one describes one change; its Behaviour section is what must be true when you finish.
+2. Change only what those issues require. Do not restructure, rename, reformat, or tidy code that works, and do not fix things no issue asks for. If you notice another problem, mention it in your result and leave it alone.
+3. Stay in your own area, as above. For an issue whose area is `both`, do the server side only; the frontend engineer is doing the other side.
+4. Do not edit the issue files or anything else in `docs/`. If an issue cannot be built without changing `docs/api-contract.md`, do not work around it: return `failed` for that issue and say why.
+5. Do not run the seed script in the build folder, and do not start, stop, or restart anything on the build's own port. The database there may hold the user's own data, and the app may be running. Check your work by reading it and by loading the changed files (for example `node --check <file>`); QA runs the tests against a temporary copy afterwards.
+
+Do not return the baseline completion sentence. Return one result per issue you were handed, in this format:
+
+```
+REFINEMENT RESULT — backend-engineer
+Issue <NN>: done | failed | no change needed
+  Changed: <files you changed, or "nothing">
+  Notes: <one or two sentences: what you did, or why it failed, and anything you could not check>
+```
+
+Use `no change needed` when an issue turns out to need nothing on the server. Use `failed` when you could not make the issue's Behaviour true; say what stands in the way. Never report `done` for a change you did not make.
