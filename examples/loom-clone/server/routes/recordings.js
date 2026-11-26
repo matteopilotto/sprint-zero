@@ -9,7 +9,7 @@ const { receiveUpload, removeUpload, mimeTypeOf } = require('../lib/upload');
 const { timestamp, sendError, defaultTitle, filePathFor, toRecording } = require('../lib/helpers');
 
 const router = express.Router();
-const MODES = ['screen', 'screen_camera'];
+const MODES = ['screen', 'screen_camera', 'camera'];
 const MAX_TITLE_LENGTH = 200;
 
 function findOwned(req) {
@@ -45,7 +45,7 @@ router.post('/', requireAuth, receiveUpload, (req, res) => {
   if (!req.file) return invalid('A video file is required.');
   const sizeBytes = fs.statSync(req.file.path).size;
   if (sizeBytes === 0) return invalid('The video file is empty.');
-  if (!MODES.includes(body.mode)) return invalid('Mode must be "screen" or "screen_camera".');
+  if (!MODES.includes(body.mode)) return invalid('Mode must be "screen", "screen_camera", or "camera".');
   if (!/^\d+$/.test(String(body.duration_seconds ?? '').trim())) {
     return invalid('Duration must be a whole number of seconds, 0 or more.');
   }

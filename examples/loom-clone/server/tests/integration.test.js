@@ -160,7 +160,7 @@ async function main() {
   // ---- invalid uploads leave nothing on disk
   const afterGood = filesOnDisk();
   const badUploads = [
-    ['bad mode', uploadForm({ mode: 'camera' })],
+    ['bad mode', uploadForm({ mode: 'webcam' })],
     ['missing mode', uploadForm({ mode: null })],
     ['negative duration', uploadForm({ duration: '-1' })],
     ['fractional duration', uploadForm({ duration: '1.5' })],
@@ -185,6 +185,14 @@ async function main() {
   r = await call('POST', '/recordings', { token: tokenA, form: uploadForm({ mode: 'screen_camera', duration: '0', title: '  Second take  ' }) });
   check('upload with a title trims it, accepts screen_camera and duration 0', r.status === 201 && r.data.recording.title === 'Second take' && r.data.recording.mode === 'screen_camera' && r.data.recording.duration_seconds === 0);
   const second = r.data.recording;
+
+  // ---- camera-only mode (added in refinement batch 1)
+  r = await call('POST', '/recordings', { token: tokenA, form: uploadForm({ mode: 'camera' }) });
+  check('upload accepts mode camera', r.status === 201 && r.data.recording.mode === 'camera');
+  if (r.status === 201) {
+    r = await call('DELETE', `/recordings/${r.data.recording.id}`, { token: tokenA });
+    check('camera-mode recording can be deleted', r.status === 204);
+  }
 
   r = await call('GET', '/recordings', { token: tokenA });
   const listA = (r.data && r.data.recordings) || [];
