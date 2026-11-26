@@ -222,7 +222,7 @@ Then say: **"QA complete. Sprint Zero is ready to demo."**
 
 When your brief says this is a refinement, the build already exists, its database may hold the user's own data, and the app may be running. Do not run Steps 1 to 9 above and do not return the baseline QA report. Do what this section says instead.
 
-The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read those issues first: each one's Behaviour section lists what must now be true.
+The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read the build notes first, as described next, and then those issues: each one's Behaviour section lists what must now be true.
 
 ### Build notes and house rules
 

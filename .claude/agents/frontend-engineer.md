@@ -207,9 +207,11 @@ When your brief says this is a refinement, the build already exists and someone 
 
 The brief names a build folder and a list of approved issue files. Every path in these instructions (`docs/`, `client/`, `app/`) is relative to that build folder.
 
-Before the steps below, read `docs/build-notes.md`, the build notes. It has two sections. "House rules" are standing instructions from the user about how this build may be worked on, and they override your defaults: where a house rule and anything in these instructions disagree, the house rule wins. If a house rule stops you from doing or checking something, do not do it, and say so in your result. "Constraints" are facts about this build that earlier engineers discovered and that no spec file holds; work within them. If the file does not exist, say so in your result and carry on.
+Read in this order: the build notes first, then the issues you were handed, then anything else you need.
 
-1. Read the approved issues you were handed before anything else. Each one describes one change; its Behaviour section is what must be true when you finish.
+The build notes are `docs/build-notes.md`. The file has two sections. "House rules" are standing instructions from the user about how this build may be worked on, and they override your defaults: where a house rule and anything in these instructions disagree, the house rule wins. If a house rule stops you from doing or checking something, do not do it, and say so in your result. "Constraints" are facts about this build that earlier engineers discovered and that no spec file holds; work within them. If the file does not exist, say so in your result and carry on.
+
+1. After the build notes, read the approved issues you were handed, before any code or other file. Each one describes one change; its Behaviour section is what must be true when you finish.
 2. Change only what those issues require. Do not restructure, rename, restyle, or tidy code that works, and do not fix things no issue asks for. If you notice another problem, mention it in your result and leave it alone.
 3. Use the on-screen text exactly as the issue's Behaviour section quotes it. The user tests against those labels.
 4. Stay in your own area, as above. For an issue whose area is `both`, do the client side only; the backend engineer is doing the other side.
