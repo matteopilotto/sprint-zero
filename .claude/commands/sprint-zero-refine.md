@@ -203,7 +203,7 @@ If the prompt holds a house rule and no request, that is a complete run: agree t
 
 A constraint is a fact about how this build works that an engineer discovered while working on it and that no spec file holds, for example an order of calls a browser API insists on. Engineers in refinement mode append constraints under `## Constraints` when they finish. This is the one write engineers make inside `<build>/docs/`; rule 4 still holds, and they do not touch the issue files or the house rules.
 
-You do not write constraints yourself. If an engineer's result says an existing constraint is no longer true, correct or remove that one entry and mention it in the batch summary.
+You never author a constraint: every entry comes from an engineer. The one change you make under `## Constraints` is to an entry that already exists. If an engineer's result says an existing constraint is no longer true, correct or remove that one entry, using what the engineer reported, and mention it in the batch summary.
 
 ---
 
