@@ -28,7 +28,8 @@ A local-first screen recorder that runs in the browser, working like Loom's reco
 - Screen only.
 - Screen plus camera, with the camera shown as a round bubble over the screen.
 - Camera only, with the camera filling the whole frame. (Added in refinement batch 1.)
-- Microphone audio is included in both modes and can be turned off.
+- Microphone audio is included in every mode and can be turned off.
+- Computer audio (the sound the computer is playing) can be included in the two screen modes, when the browser's share prompt shares it. (Added in refinement batch 2.)
 
 ### Camera background
 
@@ -47,6 +48,8 @@ A local-first screen recorder that runs in the browser, working like Loom's reco
 - A 3-second countdown (3, 2, 1) before recording starts.
 - A small overlay showing elapsed time (mm:ss) while recording.
 - Pause, resume, and stop.
+- Media key shortcuts: the keyboard's Play/Pause key pauses and resumes and the Next track key stops, from any tab or app. (Added in refinement batch 2.)
+- Floating controls: a small always-on-top window with the timer, pause, resume, stop, and cancel, so the recording can be controlled from another tab or app. (Added in refinement batch 2.)
 
 ### Storage
 

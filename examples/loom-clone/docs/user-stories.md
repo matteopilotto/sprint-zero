@@ -109,6 +109,7 @@ This story depends on the live camera preview described in story 17, so that pre
 
 - Given a user on `/record`, when they click "Start recording" and choose what to share in the browser's prompt, then a countdown element shows "3", then "2", then "1", one second apart.
 - Given the countdown has shown "1" for one second, when it ends, then the countdown disappears and the recording overlay appears at "00:00".
+- Given the recorder page itself is visible in what is being shared, when the saved video is played, then its first frame shows the recording overlay and never the countdown. (Sharpened in refinement batch 2.)
 - Given the user dismisses the browser's share prompt without choosing anything, when the prompt closes, then no countdown starts and the setup controls are still visible.
 
 **Priority:** Must-have
@@ -269,11 +270,75 @@ _Added in refinement batch 1._
 
 - Given "Screen + camera" or "Camera only" is selected, when the user looks at the recorder before or during a recording, then a "Camera view" control offers "Show", "Dim", and "Hide", with "Show" selected.
 - Given "Dim" is selected, when the user looks at the camera view on the page, then it is covered by a dark overlay so the picture is only faintly visible.
-- Given "Hide" is selected, when the user looks at the page, then the camera picture is replaced by a dark placeholder reading "Camera hidden", and during a recording the placeholder adds "still recording".
+- Given "Hide" is selected, when the user looks at the page, then the camera picture is replaced by a dark placeholder reading "Camera hidden", and during a recording the placeholder adds "still recording" on a second line, with all of the text visible inside the round view.
 - Given "Dim" or "Hide" is selected, when a recording is made and played back, then the camera appears in the saved video at normal brightness, exactly as with "Show".
 - Given a recording is in progress, when the user switches between "Show", "Dim", and "Hide", then the page changes immediately and the recording continues without interruption.
 - Given "Hide" is selected, when the user looks at the browser, then the camera indicator is still on, because the camera is still being recorded.
 - Given a user last used "Dim", when they next open `/record` in the same browser, then "Dim" is preselected.
+
+**Priority:** Must-have
+**Effort:** Small
+
+### Story 25 — Computer audio
+
+_Added in refinement batch 2._
+
+**Story:** As a user recording my screen, I want to include the sound my computer is playing so that viewers hear what I hear.
+
+**Acceptance criteria:**
+
+- Given "Screen only" or "Screen + camera" is selected on `/record`, when the page opens, then a "Computer audio" toggle is visible and switched off.
+- Given "Camera only" is selected, when the user looks at `/record`, then the "Computer audio" toggle is not visible, because there is no share prompt in that mode.
+- Given "Computer audio" is on, when the user clicks "Start recording", shares a tab or the entire screen, and ticks the audio option in the browser's prompt, then the saved video includes the sound that was playing.
+- Given "Computer audio" and "Microphone" are both on, when a recording is made with audio shared, then the saved video includes both the computer's sound and the user's voice.
+- Given "Computer audio" is on, when the user shares something without audio (the audio option left unticked, or a single window), then recording carries on, and the notice "Computer audio isn't being recorded, because no audio was shared in the browser's prompt." is visible on the recorder page.
+- Given "Computer audio" is off, when a recording is made, then the saved video contains no computer sound.
+- Given a user last recorded with "Computer audio" on, when they next open `/record` in the same browser, then it is still on.
+
+**Priority:** Must-have
+**Effort:** Small
+
+### Story 26 — Floating controls
+
+_Added in refinement batch 2._
+
+**Story:** As a user who is recording another tab or app, I want floating controls that stay on top so that I can pause, stop, or cancel without going back to the recorder tab.
+
+**Acceptance criteria:**
+
+- Given a browser that offers a picture-in-picture window for web pages, when the user opens `/record`, then a "Floating controls" toggle is visible and switched on.
+- Given "Floating controls" is on, when the user clicks "Start recording", then a small floating window opens that stays on top of other tabs and apps and shows the countdown, then a red recording dot and the elapsed time as mm:ss.
+- Given the browser did not let the floating window open by itself, or the user closed it, when the user looks at the recorder page during the countdown or the recording, then an "Open floating controls" button is visible and opens it.
+- Given the floating window is open, when the user clicks "Pause", "Resume", or "Stop" in it, then the recording behaves exactly as if the same button had been clicked on the recorder page.
+- Given the floating window is open, when the user clicks "Cancel" in it, then it asks "Discard this recording?" with "Discard" and "Keep recording" buttons, and "Discard" throws the take away.
+- Given the user closes the floating window with its own close button, when they look at the recorder page, then the recording is still in progress.
+- Given a recording is stopped, cancelled, or never starts because the share prompt was dismissed, when that happens, then the floating window closes.
+- Given a tab or a single window is being shared, when the saved video is played, then the floating window is not in it.
+- Given the user shares their entire screen, when the share prompt closes, then the floating window closes before recording starts, so it is not in the saved video, and the recorder page shows a notice beginning "Floating controls are closed because you are sharing your entire screen".
+- Given "Floating controls" is off, when a recording is started, then no floating window opens.
+
+Known limit: floating controls cannot be used while the entire screen is shared, because a web page cannot keep one of its windows out of a whole-screen capture. The "Open floating controls" button still works for people who can drag the window to a second screen that is not being recorded.
+
+**Priority:** Must-have
+**Effort:** Medium
+
+### Story 27 — Media key shortcuts
+
+_Added in refinement batch 2._
+
+**Story:** As a user who is recording my entire screen, I want to pause and stop with my keyboard's media keys so that I can control the recording without anything extra on screen.
+
+**Acceptance criteria:**
+
+- Given a user on `/record`, when the page opens, then a "Media key shortcuts" toggle is visible and switched on.
+- Given "Media key shortcuts" is on and a recording is in progress, when the user presses the keyboard's Play/Pause key from any tab or app, then the recording pauses, and pressing it again resumes it, exactly as "Pause" and "Resume" do.
+- Given "Media key shortcuts" is on and a recording is in progress or paused, when the user presses the Next track key from any tab or app, then the recording stops and is saved, exactly as "Stop" does.
+- Given "Media key shortcuts" is on, when a recording is in progress, then the recorder page shows "Media keys: Play/Pause pauses and resumes. Next track stops and saves."
+- Given a recording made with "Media key shortcuts" on, when it is played, then nothing has been added to its picture or sound.
+- Given a recording has stopped or been cancelled, when the user presses the media keys, then they control the user's music player again.
+- Given "Media key shortcuts" is off, when a recording is in progress, then the media keys are left alone.
+
+Known limits: there is no media key for cancel, and while a recording is in progress the media keys do not control other players.
 
 **Priority:** Must-have
 **Effort:** Small
@@ -343,10 +408,8 @@ _Added in refinement batch 1._
 
 ## Nice-to-have
 
-- Include the computer's own sound alongside the microphone.
 - Resize the camera bubble.
-- Recording controls that float above other windows.
-- Keyboard shortcuts for start, pause, and stop.
+- Ordinary keyboard shortcuts (letter keys) for start, pause, and stop. They would only work while the recorder tab or the floating controls are focused; media keys (story 27) work from anywhere.
 - Thumbnails and search in the library.
 - Download recordings as MP4.
 
