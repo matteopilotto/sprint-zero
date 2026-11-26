@@ -752,10 +752,10 @@ For a `cli-tool` there is nothing to start. Print one example command and go to 
 
 **If every port is free**, start the app as the baseline run does, minus the seed:
 
-1. Install dependencies only where they are missing or where an engineer reported changing the dependency file (`package.json` or `requirements.txt`). Print one line per install.
+1. Install dependencies only where they are missing or where an engineer reported changing the dependency file of the resolved stack profile. Print one line per install.
 2. Start the backend (or the single `nextjs` app) in the background with its resolved run command, and record its process ID. Wait two seconds, then check it answers: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<backend-port>/`. Any HTTP response means it is up.
 3. For a `web-app` with a separate frontend, start the frontend the same way and check its port.
-4. Open the app: the frontend address for a `web-app`, the API root (or `/docs` for FastAPI) for an `api-service`. Use `open`, `xdg-open`, `wslview`, or `cmd.exe /c start` as the system provides. If none works, print the address instead.
+4. Open the app: the frontend address for a `web-app`, the API's address for an `api-service`, each on its resolved port. Use `open`, `xdg-open`, `wslview`, or `cmd.exe /c start` as the system provides. If none works, print the address instead.
 5. Print the addresses, the process IDs, and how to stop each one later by its process ID (`kill <pid>`). Print no demo login: the seed was not run, and the user's own accounts are still there.
 
 If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it. Go to 8f.

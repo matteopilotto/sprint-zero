@@ -243,7 +243,7 @@ You do not write to the build notes. If you learn something the next batch shoul
 
 ### Regression: the existing tests, against a temporary copy
 
-Run the tests the build already has (`server/tests/`, or `tests/` at the app root for `nextjs`) without changing them.
+Run the tests the build already has, without changing them. Use the build's resolved run, seed, test, and check commands, directories, and ports from `.claude/stacks.md` and `docs/scope.md`. Where neither names a command, as with the seed and test commands, read it from the build itself: its dependency file, its seed script, and its test folder.
 
 1. Copy the backend directory to a new temporary folder, leaving out the database file and its side files (`*.db`, `*.db-*`) and any folder of stored uploads.
 2. In the copy, run the seed script so the copy has its own fresh demo data.
@@ -251,7 +251,7 @@ Run the tests the build already has (`server/tests/`, or `tests/` at the app roo
 4. Run the existing tests against the copy's address.
 5. Stop the copy by its process ID and delete the temporary folder.
 
-For a `node-react` build this looks like:
+Example for a `node-react` build only. Every other stack profile follows the same five steps with its own resolved commands:
 
 ```bash
 T=$(mktemp -d /tmp/sprint-zero-qa.XXXXXX)
