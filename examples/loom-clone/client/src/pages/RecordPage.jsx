@@ -8,6 +8,7 @@ import { loadSettings, saveSettings, saveSettingsPatch } from '../recorder/setti
 import { useCamera } from '../recorder/useCamera.js'
 import { useRecorder } from '../recorder/useRecorder.js'
 import { canFloat, useFloatingWindow } from '../recorder/useFloatingWindow.js'
+import { canUseMediaKeys, createMediaKeys } from '../recorder/mediaKeys.js'
 
 const CAMERA_BLOCKED = "Camera access is blocked. Allow it in your browser's site settings, then try again."
 const canRecord = Boolean(navigator.mediaDevices?.getUserMedia) && typeof window.MediaRecorder !== 'undefined'
@@ -38,6 +39,24 @@ export default function RecordPage() {
   useEffect(() => {
     if (!live) closeFloating()
   }, [live, closeFloating])
+
+  // "Media key shortcuts": while a take is under way, Play/Pause pauses and
+  // resumes it and Next track stops it, from any tab or app.
+  const recorderRef = useRef(recorder)
+  recorderRef.current = recorder
+  const mediaKeysOn = canUseMediaKeys && settings.mediaKeys && live
+  useEffect(() => {
+    if (!mediaKeysOn) return
+    const keys = createMediaKeys({
+      onPauseResume: () => {
+        const current = recorderRef.current
+        if (current.phase === 'paused') current.resume()
+        else current.pause()
+      },
+      onStop: () => recorderRef.current.stop(),
+    })
+    return () => keys.dispose()
+  }, [mediaKeysOn])
 
   // Segmentation failed to load or is too slow: use the real background.
   const onEffectFailed = useCallback(() => {
@@ -149,12 +168,14 @@ export default function RecordPage() {
             hint={hint}
             canStart={canStart}
             canFloat={canFloat}
+            canUseMediaKeys={canUseMediaKeys}
             onStart={handleStart}
           />
         ) : (
           <RecordingStage
             recorder={recorder}
             mode={settings.mode}
+            mediaKeysOn={mediaKeysOn}
             floating={{ available: canFloat && live, isOpen: Boolean(floatingWindow), open: openFloating }}
           />
         )}

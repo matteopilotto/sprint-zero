@@ -4,7 +4,7 @@ import { formatDuration } from '../format.js'
 
 // What the recorder shows once "Start recording" has been clicked:
 // the countdown, then the timer overlay and controls, then the save status.
-export default function RecordingStage({ recorder, mode, floating }) {
+export default function RecordingStage({ recorder, mode, floating, mediaKeysOn }) {
   const { phase, countdown, elapsedSeconds, saveError, notice, wholeScreen, blobUrl } = recorder
   const [confirmingCancel, setConfirmingCancel] = useState(false)
 
@@ -95,6 +95,9 @@ export default function RecordingStage({ recorder, mode, floating }) {
             ? 'Recording carries on if you switch to another tab or window. Come back to this tab to pause or stop.'
             : 'Recording another window? Come back to this tab to pause or stop, or use the browser\'s "Stop sharing" button.'}
       </p>
+      {mediaKeysOn && (
+        <p className="muted">Media keys: Play/Pause pauses and resumes. Next track stops and saves.</p>
+      )}
       {confirmingCancel && (
         <ConfirmDialog
           message="Discard this recording? Nothing will be saved."

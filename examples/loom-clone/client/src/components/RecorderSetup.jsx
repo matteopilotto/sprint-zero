@@ -19,7 +19,7 @@ const POSITIONS = [
 ]
 
 // The controls shown before recording starts.
-export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, canFloat, onStart }) {
+export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, canFloat, canUseMediaKeys, onStart }) {
   const fileInput = useRef(null)
   const cameraOn = settings.mode !== 'screen'
   const hasBubble = settings.mode === 'screen_camera'
@@ -80,6 +80,26 @@ export default function RecorderSetup({ settings, onChange, imageName, onImageCh
             <span className="muted">
               A small window that stays on top, to pause, stop, or cancel from anywhere. It closes if you share
               your entire screen, because it would appear in the video.
+            </span>
+          )}
+        </div>
+      )}
+
+      {canUseMediaKeys && (
+        <div className="field">
+          <label className="choice toggle">
+            <input
+              type="checkbox"
+              name="mediaKeys"
+              checked={settings.mediaKeys}
+              onChange={(e) => onChange({ mediaKeys: e.target.checked })}
+            />
+            Media key shortcuts
+          </label>
+          {settings.mediaKeys && (
+            <span className="muted">
+              While recording, the Play/Pause key pauses and resumes, and the Next track key stops and saves, from any
+              tab or app. The keys won't control your music until the recording ends.
             </span>
           )}
         </div>
