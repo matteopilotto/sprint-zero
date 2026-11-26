@@ -13,6 +13,10 @@ The words build, baseline, refinement, batch, issue, track, built, and confirmed
 
 To tell the two apart, look at the first word of `$ARGUMENTS`. If it is plainly written as a path (it contains `/` or starts with `.`), or it names a folder that holds `docs/scope.md`, treat it as the build folder and everything after it as the requests. Otherwise the build folder is the repo root and the whole text is the requests. An ordinary first word that happens to match a folder name, as in "client crashes on load", is part of the request.
 
+`--no-confirm` (optional flag, anywhere in `$ARGUMENTS`): skip the wait in step 4. The issues are still written and the table is still printed, and the build starts straight after it. The flag is the user's approval given in advance. It does not skip clarifying questions: an ambiguous request is still asked about in step 2e, and that answer is still waited for. Take the flag out of the text before splitting the requests.
+
+A plain instruction in the request has the same effect as `--no-confirm`: "go ahead without asking", "no need to confirm", "don't wait for me", "just build it". It counts only when it is about the run as a whole, not when it describes what the build should do ("delete the recording without asking" is a request about the delete button). It is not a refinement, so it gets no issue and is not quoted in one. If you cannot tell which is meant, wait for approval as usual.
+
 `--no-launch` is an optional flag and may appear anywhere in `$ARGUMENTS`. It is not part of any request. With it, this command does not start, restart, or open the app at the end of the batch; it prints the run commands and the user starts the app themselves. See step 8e.
 
 ## Rules that hold for the whole run
@@ -141,7 +145,7 @@ If it is not empty, print the changed files (the first ten, then "and <count> mo
 >
 > Commit in another terminal and reply "continue", or reply "continue" to go ahead as things are, or "stop" to end here.
 
-Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
+Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. `--no-confirm` does not skip this wait: it approves the batch in advance, not the risk to unsaved work. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
 
 ---
 
@@ -177,6 +181,24 @@ Every refinement in this version of the command takes the straight-to-code track
 
 If a request would change how a feature behaves or add a feature, do not build it on this track. Leave it out of the batch, write no issue file for it, and tell the user in one line that it needs the spec-first track, which this command does not support yet. Carry on with the other requests.
 
+### 2e. Ask about anything ambiguous
+
+A request is ambiguous when you cannot write its Behaviour statements without guessing: it can be read in two ways that would be built differently, or it does not say which screen or which outcome the user means ("make the list nicer"). Check the build first. A question the code or the spec set can answer is not one to ask the user, and neither is a question about how to write the code.
+
+If nothing is ambiguous, go to step 3 without asking anything.
+
+Otherwise ask every question in one message, before writing any issue and before the table in step 4. Number the questions, quote the few words of the request each one is about, and offer the readings you can see so the user can answer in a word.
+
+> Before I write these up, I need to check <count> thing(s):
+>
+> 1. "<the words in question>": <question>? <reading A, or reading B>
+>
+> Answer what you can. Anything left unanswered is saved as `needs-info` and is not built in this batch.
+
+Stop and wait for the reply. This wait happens even with `--no-confirm`: a wrong guess costs more than a pause.
+
+Ask once. Do not send a second round of questions. A question counts as unanswered when the reply skips it, puts it off, or does not settle it. The requests that needed no question, and those whose question was answered, carry on as normal.
+
 ---
 
 ## Step 3 — Write the issues
@@ -185,13 +207,19 @@ Create `<build>/docs/issues/` if it does not exist. Write one file per refinemen
 
 Write the files in the order the user gave the requests, so the numbers follow the prompt.
 
+When a question from step 2e was answered, record it in the issue's Request section, under the quoted request: a line `Clarified: <the question>` followed by the user's answer, quoted unchanged. Write the Behaviour section from the answer.
+
+A refinement whose question is still unanswered gets a file too, with `Status: needs-info` in place of `proposed`. Under the quoted request add a line `Waiting on: <the question>`, and make the Behaviour section the single line `Not written yet: waiting on the answer above.` Give Track and Area your best reading for now. A `needs-info` issue is not approved and not built.
+
+If the prompt answers the question of a `needs-info` issue left by an earlier batch, do not write a second issue for it. Update that file: replace the `Waiting on:` line with the `Clarified:` line and the answer, write its Behaviour, give it this batch's number, and set `Status: proposed`. It keeps its own number and joins this batch.
+
 ---
 
 ## Step 4 — Wait for approval
 
 ### 4a. Print the table
 
-Print one row per issue written in step 3, then the question.
+Print one row per `proposed` issue of this batch, then the question. Print the table on every run, including when the wait is skipped.
 
 ```
 REFINEMENT BATCH <N> — PROPOSED
@@ -203,21 +231,42 @@ Build: <build>
 | 04 | <title>                       | straight to code | client | <build>/docs/issues/04-<slug>.md              |
 ```
 
-> Nothing has been changed yet. Read the issues, edit the files if anything is off, and reply "approve" when you are happy for me to build them.
+> Nothing has been changed yet. Read the issues, edit the files if anything is off, and reply "approve" when you are happy for me to build them. To leave some out, say which, for example "approve all but 05".
+
+If the batch has `needs-info` issues, list them under the table, outside it, one line each:
+
+> Waiting on your answer, and not built until then:
+> 06 <title>: <the question>
+
+When the wait is skipped (`--no-confirm`, or the same in plain words), print this in place of the question and go straight to 4c:
+
+> You asked me not to wait, so I am building these now.
+
+If no issue of the batch is `proposed`, because every one is `needs-info`, print the list and stop. There is nothing to approve yet.
 
 ### 4b. Wait
 
 Stop and wait for the user's reply. Do not spawn anyone and do not touch any file while waiting.
 
-If the user asks for a change to an issue, edit that issue file, print the table again, and wait again. If the user says not to go ahead at all, stop here without building and leave the files in place.
+If the user asks for a change to an issue, edit that issue file, print the table again, and wait again. If the reply answers the question of a `needs-info` issue, rewrite that issue as step 3 describes for an answered question, set it to `Status: proposed`, print the table again, and wait again.
+
+One reply can approve some issues and reject others: "approve 04 and 06, drop 05", or "all but 05". Take every issue the reply does not reject as approved, and go to 4c. If it is unclear which issues the user means, ask before changing any status.
+
+If the user rejects every issue, mark them all `dropped` as 4c describes, say that nothing was built, and stop. If the user only wants to pause ("not now", "let me think"), stop here without building and leave the files as they are.
 
 ### 4c. Re-read, then mark approved
 
-When the user approves, read every issue file of this batch again from disk before doing anything else. The user may have edited them, and the file as it now stands is what gets built: its Behaviour, its Area, and its title replace whatever you remember writing.
+When the user approves, read every issue file of this batch again from disk before doing anything else. The user may have edited them, and the file as it now stands is what gets built: its Behaviour, its Area, and its title replace whatever you remember writing. A file whose status the user changed to `dropped` by hand is a rejected issue.
 
-Then change `Status: proposed` to `Status: approved` in each file, and print:
+For each issue the user rejected, change its status to `Status: dropped` and change nothing else in it. Never delete, rename, or renumber a dropped issue's file: it is the record of what the user decided against.
+
+Then change `Status: proposed` to `Status: approved` in each remaining `proposed` file, and print:
 
 > Batch <N> approved: <count> issue(s). Starting the build.
+
+When issues were dropped or are waiting on an answer, add a line saying which: `Dropped: 05.` and `Waiting on your answer: 06.`
+
+From here to the end of the run, only the `approved` issues are worked on. `dropped` and `needs-info` issues are not sent to an engineer or to QA, and their status and Results section stay as they are. In the batch summary of step 8 each one still gets a row, showing its status and "not built".
 
 ---
 
