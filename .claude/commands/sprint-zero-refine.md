@@ -23,7 +23,7 @@ A plain instruction in the request has the same effect as `--no-confirm`: "go ah
 
 These apply in every step. Later steps do not repeat them.
 
-1. Nothing in the spec set or the code changes before the user approves in step 4. Until then, the only files this command writes are the new issue files.
+1. Nothing in the spec set or the code changes before the user approves in step 4. Until then, the only files this command writes are the new issue files and the build notes.
 2. You never edit build code yourself, however small the change. Code goes to `backend-engineer` and `frontend-engineer`. You may read code to write a better issue.
 3. Do not invoke `tech-lead`. The approved issues are the build brief.
 4. You are the only one who writes issue files. Engineers and QA return results to you, and you record them.
@@ -37,6 +37,7 @@ Throughout this file, `<build>` means the build folder. Every path the worker ag
 
 - The spec set is `<build>/docs/`. The scope file is `<build>/docs/scope.md`.
 - Issues are `<build>/docs/issues/NN-<slug>.md`. They are committed with the spec set and travel with the build if it is moved.
+- The build notes are `<build>/docs/build-notes.md`: one file per build, committed with the spec set like the issues. See "Build notes" below.
 
 ## Issue files
 
@@ -105,6 +106,67 @@ An issue always has exactly one of these six statuses. They are the kit's own li
 | `confirmed`  | The user has tried it and accepted it                                   |
 | `dropped`    | The user decided against it                                             |
 
+## Build notes
+
+The build notes file is `<build>/docs/build-notes.md`. It carries what one batch learned to the next: a sub-agent spawned in a later batch starts with no memory, and this file is how it finds out what the user has ruled and what earlier engineers discovered. Build notes and house rule are used here as `GLOSSARY.md` defines them.
+
+### Layout
+
+The file has a title, one line of introduction, and two sections, with exactly these headings.
+
+```markdown
+# Build notes
+
+What earlier batches learned about this build. Every engineer and QA sub-agent reads this file before working on a refinement.
+
+## House rules
+
+Standing instructions from the user about how this build may be worked on. They override the agents' defaults.
+
+None yet.
+
+## Constraints
+
+Facts about how this build works that no spec file holds, added by the engineers who found them.
+
+None yet.
+```
+
+Step 3 creates the file from this template on the build's first refinement. After that it is only ever added to. When the first entry goes into a section, it replaces that section's `None yet.` line.
+
+### House rules
+
+A house rule is a standing instruction from the user about how the build may be worked on, for example "do not drive a browser" or "do not stop processes you did not start". It is about how the work is done, not about what the product does: a request to change the product is a refinement and gets an issue.
+
+The user may state a house rule anywhere: in the prompt next to the requests, in a reply while you wait for approval, or later in the run. Whenever you notice one:
+
+1. Decide whether it is standing or one-off. A standing rule is one the user would expect to hold in every later batch without saying it again. A one-off instruction applies to this batch only ("skip the restart this time", "leave the server alone today"). If you cannot tell, ask: "Should this hold for every future batch, or only this one?"
+2. Follow a one-off instruction for the rest of this batch and repeat it in every brief you write, but do not write it to the build notes.
+3. For a standing rule, put the wording you intend to record in front of the user and wait for a yes or a correction:
+
+   > I will record this as a house rule for this build, so every later batch follows it:
+   >
+   > "<the rule as one or two plain sentences>"
+   >
+   > Is that wording right?
+
+   For a rule stated in the prompt, ask this at the end of step 2, before writing the issues, in the same message as the questions of step 2e when there are any, so the user is interrupted once. For one stated later, ask as soon as you notice it. `--no-confirm` does not skip this question: it approves the batch in advance, not the wording of a rule.
+4. Once the user agrees, add the rule as one list item under `## House rules`, in the agreed wording, with the date. Add a short reason only if the user gave one. Never write a house rule the user has not agreed the wording of, and never record one on your own initiative.
+
+Agreeing the wording of a house rule is not approval of the batch. Step 4 still waits for that.
+
+A rule the user has stated is in force for the rest of the run from the moment they state it, even while its wording is still being agreed. House rules bind you as well as the sub-agents, and they override the defaults in this file and in the agents' instructions. If a house rule makes a step of this command impossible, skip that part of the step and say so in the batch summary; do not bend the rule.
+
+If the user withdraws or changes a house rule, confirm the new wording the same way and edit that one entry.
+
+If the prompt holds a house rule and no request, that is a complete run: agree the wording, create the build notes file if it is missing, write the rule, and stop. No issue is written and no batch is started.
+
+### Constraints
+
+A constraint is a fact about how this build works that an engineer discovered while working on it and that no spec file holds, for example an order of calls a browser API insists on. Engineers in refinement mode append constraints under `## Constraints` when they finish. This is the one write engineers make inside `<build>/docs/`; rule 4 still holds, and they do not touch the issue files or the house rules.
+
+You do not write constraints yourself. If an engineer's result says an existing constraint is no longer true, correct or remove that one entry and mention it in the batch summary.
+
 ---
 
 ## Before step 1 — find the build
@@ -120,6 +182,8 @@ If the folder does not exist, or it has no `docs/scope.md`, print this and stop.
 If the build is found, read `<build>/docs/scope.md` and resolve its build configuration (project type, stack profile, data layer) and scope level against `.claude/stacks.md`. Keep the resolved directories, run commands, and ports for steps 6 and 7. Then print:
 
 > Refining the build in `<build>` (<project type> / <stack profile> / <data layer>, <scope level>).
+
+If `<build>/docs/build-notes.md` exists, read it now. Its house rules apply to you for the whole run, as "Build notes" above describes.
 
 ---
 
@@ -171,6 +235,8 @@ Break the prompt into individual refinements. One refinement is one change the u
 
 Do not add refinements the user did not ask for, and do not fold a request into another because the same file is involved.
 
+An instruction about how the build may be worked on ("do not drive a browser", "never restart my server") is not a refinement and gets no issue. Handle it as "Build notes" above describes: confirm the wording of a standing rule with the user before going on to step 3, and simply follow a one-off instruction for this batch.
+
 ### 2c. Work out the area
 
 For each refinement, read as much of the build as you need to decide whether the change belongs to the server, the client, or both, and to find the exact on-screen labels involved. Read only; change nothing.
@@ -212,6 +278,8 @@ When a question from step 2e was answered, record it in the issue's Request sect
 A refinement whose question is still unanswered gets a file too, with `Status: needs-info` in place of `proposed`. Under the quoted request add a line `Waiting on: <the question>`, and make the Behaviour section the single line `Not written yet: waiting on the answer above.` Give Track and Area your best reading for now. A `needs-info` issue is not approved and not built.
 
 If the prompt answers the question of a `needs-info` issue left by an earlier batch, do not write a second issue for it. Update that file: replace the `Waiting on:` line with the `Clarified:` line and the answer, write its Behaviour, give it this batch's number, and set `Status: proposed`. It keeps its own number and joins this batch.
+
+If `<build>/docs/build-notes.md` does not exist, this is the build's first refinement: create the file now from the template in "Build notes" above. If the user agreed the wording of a house rule in step 2, write it under `## House rules` now.
 
 ---
 
@@ -300,7 +368,9 @@ The approved issues are the brief. Each engineer's prompt contains:
 
 - That this is a refinement, and that the engineer must follow the "Refinement mode" section of its instructions.
 - The build folder, and that every path in its instructions (`docs/`, `server/`, `client/`, `app/`, `cli/`) is relative to that folder.
-- The batch number and the paths of the approved issue files for its area, with the instruction to read them before anything else.
+- The path of the build notes, `<build>/docs/build-notes.md`, with the instruction to read it first, before the issues: its house rules override the engineer's defaults, and its constraints are what earlier batches learned. Also that the engineer appends any constraint it discovers under `## Constraints` when it finishes.
+- Any one-off instruction the user gave for this batch that affects the engineer's work, in the user's words.
+- The batch number and the paths of the approved issue files for its area, with the instruction to read them before changing anything.
 - The resolved build configuration and scope level.
 - For an issue with `Area: both`, that the other engineer is working on the other side of the same issue at the same time.
 
@@ -330,6 +400,8 @@ The QA prompt contains:
 
 - That this is a refinement, and that QA must follow the "Refinement mode" section of its instructions.
 - The build folder, and that every path in its instructions is relative to that folder.
+- The path of the build notes, `<build>/docs/build-notes.md`, with the instruction to read it first, before the issues: its house rules override QA's defaults, and anything a house rule stops QA from checking is reported as untested with a click-through item.
+- Any one-off instruction the user gave for this batch that affects how QA may check, in the user's words.
 - The batch number and the paths of the issue files that are ready for QA.
 - The resolved build configuration, scope level, directories, run commands, and ports.
 - Which engineers ran and which files each reported changing.
