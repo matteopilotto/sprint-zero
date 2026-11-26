@@ -29,7 +29,7 @@ The user's answer, as the original issue recorded it (their exact words were not
 - User stories: story 5, "Choose a recording mode", gains the third mode. New story 22, "Camera-only recording".
 - API contract: `mode` gains a third value, `camera`. `POST /recordings` accepts it, and the `Recording` entity and the examples list it.
 - Decisions: reverses the "Two recording modes instead of three" cut. Recorded under "Refinement batch 1", with the three steps of "Camera view size".
-- Scope: the recording modes list.
+- Scope and PRD: `scope.md` gained "Camera only" in its recording modes list and the camera view size in "Camera options". In `prd.md`, the out-of-scope line "Camera-only recording, custom capture areas, and system audio as a separate option." lost camera-only recording, and story 22 joined the story list.
 
 ## Results
 
@@ -54,4 +54,4 @@ Batch 1, 2026-11-26.
 - "Cancel" discards the take and returns to setup.
 - Regression: "Screen only" and "Screen + camera" recordings still work as before.
 
-**Tried by the user:** 2026-11-26. The original issue records: "User click-through: camera-only works. Closed."
+**Confirmed:** by the user, 2026-11-26. The original issue records: "User click-through: camera-only works. Closed."

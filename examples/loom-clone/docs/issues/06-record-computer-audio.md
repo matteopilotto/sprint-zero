@@ -20,7 +20,8 @@ Area: client
 ## Spec changes
 
 - User stories: new story 25, "Computer audio".
-- API contract: none (client only). This is a browser-only setting.
+- API contract: no endpoint, field, or error code. The sentence listing the recorder settings that live only in the browser gained the computer audio setting.
+- Scope and PRD: `scope.md` gained a computer audio line. In `prd.md`, the out-of-scope line "Custom capture areas and system audio as a separate option." lost system audio.
 - Decisions: reverses the "Computer sound is not offered" part of the earlier microphone decision. Recorded under "Refinement batch 2".
 
 ## Results

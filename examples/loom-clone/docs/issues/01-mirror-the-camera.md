@@ -25,6 +25,7 @@ The user's answer, as the original issue recorded it (their exact words were not
 
 - User stories: new story 23, "Mirror the camera".
 - API contract: none (client only). This is a browser-only setting.
+- Scope and PRD: `scope.md` gained a "Camera options" list with this option, and `prd.md` gained story 23 in its list. No sentence in either was false.
 - Decisions: "Mirror camera" under "Refinement batch 1", since Loom's "flip camera" was not in the original scope. Text held up to the camera reads backwards for viewers.
 
 ## Results
@@ -45,4 +46,4 @@ Batch 1, 2026-11-26.
 - With "Custom image", the person is flipped and the image is not. With "Blur", the blurred room flips with the person.
 - The setting is still on after reloading `/record`.
 
-**Tried by the user:** 2026-11-26. The original issue records: "User click-through: mirror works. Closed."
+**Confirmed:** by the user, 2026-11-26. The original issue records: "User click-through: mirror works. Closed."

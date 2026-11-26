@@ -27,7 +27,8 @@ The request offered two ways, shortcuts or floating buttons. No question was put
 ## Spec changes
 
 - User stories: new story 26, "Floating controls". It was changed again, in the same batch, for the entire-screen rule above.
-- API contract: none (client only).
+- API contract: no endpoint, field, or error code. The sentence listing the recorder settings that live only in the browser gained the floating controls setting.
+- Scope and PRD: `scope.md` gained a floating controls line. In `prd.md`, the out-of-scope line "Controls that float over other applications. A web page cannot draw outside its own tab." was replaced by one about letter-key shortcuts.
 - Decisions: reverses the "Controls stay in the recorder tab" cut. Recorded under "Refinement batch 2", with the entire-screen rule, the "Open floating controls" fallback, and why letter-key shortcuts were not built.
 
 ## Results

@@ -22,7 +22,8 @@ The user's exact words were not kept. The original issue recorded the request as
 ## Spec changes
 
 - User stories: new story 27, "Media key shortcuts".
-- API contract: none (client only).
+- API contract: no endpoint, field, or error code. The sentence listing the recorder settings that live only in the browser gained the media key shortcuts setting.
+- Scope and PRD: `scope.md` gained a media key shortcuts line. In `prd.md`, the out-of-scope line that replaced "Controls that float over other applications." names letter-key shortcuts only, since media keys are now in.
 - Decisions: "Shortcuts use the keyboard's media keys, not letter keys" and "Media keys work by playing silence", under "Refinement batch 2".
 
 ## Results
@@ -46,4 +47,4 @@ Batch 2, 2026-11-26.
 - After the recording ends, the keys control the music player again.
 - With the toggle off, the keys are untouched during a recording.
 
-**Tried by the user:** 2026-11-26, in Brave. The original issue records: "User click-through: "yes, it works!". Closed."
+**Confirmed:** by the user, 2026-11-26, in Brave. The original issue records: "User click-through: "yes, it works!". Closed."

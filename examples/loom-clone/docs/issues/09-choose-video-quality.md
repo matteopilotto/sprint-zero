@@ -21,7 +21,8 @@ Area: client
 ## Spec changes
 
 - User stories: new story 28, "Video quality". Story 22, "Camera-only recording", and story 21, "Remember settings", adjusted.
-- API contract: none (client only). This is a browser-only setting.
+- API contract: no endpoint, field, or error code. The sentence listing the recorder settings that live only in the browser gained the video quality setting.
+- Scope and PRD: `scope.md` gained a video quality line, and `prd.md` gained a note that a choice of video quality was added. No sentence in either was false.
 - Decisions: reverses the "one quality level" part of the "One quality level, WebM format" cut and narrows the "VP8 video" decision. Recorded under "Refinement batch 3".
 
 ## Results

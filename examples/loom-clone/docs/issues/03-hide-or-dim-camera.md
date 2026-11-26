@@ -28,6 +28,7 @@ A second question, whether the overlay is one fixed darkness level or adjustable
 
 - User stories: new story 24, "Dim or hide my camera view".
 - API contract: none (client only).
+- Scope and PRD: `scope.md` gained a "Camera options" list with this option, and `prd.md` gained story 24 in its list. No sentence in either was false.
 - Decisions: "Show, dim, or hide the camera view" and "The dim level is fixed", under "Refinement batch 1".
 
 ## Results
