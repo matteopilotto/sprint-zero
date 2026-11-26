@@ -466,7 +466,7 @@ Acceptance criteria say the same thing as the issue's Behaviour section, with th
 
 If another part of the file would now be wrong, such as a line listing the new feature as not included, correct that line and nothing around it.
 
-Keep a list of the stories this step added or changed, by number and name. Step 7 hands it to QA.
+Keep a list of the stories this step added or changed, by number and name, including any that an earlier run of the same issues already wrote. Step 7 hands it to QA.
 
 ### 5b. API contract
 
