@@ -155,7 +155,11 @@ Nothing else makes an issue `confirmed`: not a QA pass, not a clean regression r
 
 ### 2a. Check there is a request
 
-If no request text is left after the build folder, print this and stop:
+Look in `<build>/docs/issues/` for issues with `Status: approved`. Those are issues the user already agreed to that an earlier run did not finish, most often because the batch stopped in `REFINE_NEEDED`.
+
+If there is request text, this run is a new batch. Leave any `approved` issues from earlier runs out of it; tell the user in one line which numbers are still waiting and that running the command with no request resumes them. Then go to 2b.
+
+If no request text is left after the build folder and any flags, this run is a resume.
 
 > Tell me what to change. For example: `/sprint-zero-refine the save button stays greyed out after an error`.
 
