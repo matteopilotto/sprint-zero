@@ -612,11 +612,11 @@ The QA prompt contains:
 
 A batch touches auth when an approved issue changes signing up, logging in, logging out, how the session is kept, which pages or endpoints need a login, or how the server works out who a request comes from; or when an engineer reported changing a file that does any of those (the auth routes or middleware, the session context, the protected route wrapper, the login or signup page). When neither is true, tell QA the batch does not touch auth and that the full auth sequence must not be run. The existing tests still run in every batch, and they include whatever auth tests the build already has.
 
-QA returns one regression result for the batch, one check per story named in the brief, the auth sequence result when it was asked for, and one result per issue: what it checked, what it could not check, and a click-through list for the user. If the report has no check for a story you named, that story is untested; say so in the issue's Results. Anything QA could not check is untested. Never report it as passing, and never fill a gap in QA's report from your own reading of the code.
+QA returns one regression result for the batch, the frontend build result, one line per regression failure naming the issues QA believes are implicated or saying "cannot tell", one check per story named in the brief, the auth sequence result when it was asked for, and one result per issue: what it checked, what it could not check, and a click-through list for the user. If the report has no check for a story you named, that story is untested; say so in the issue's Results. Anything QA could not check is untested. Never report it as passing, and never fill a gap in QA's report from your own reading of the code.
 
 ### If QA reports a failure
 
-A failure is any of these in QA's report: an issue marked `fail`, a regression run with failing tests, or a frontend build that fails. An untested item is not a failure.
+A failure is either of these in QA's report: an issue marked `fail`, or a regression failure. A regression failure is a failing existing test or a failing frontend build; the two are treated alike. An untested item is not a failure.
 
 Re-spawn the responsible engineer once, with QA's failure report, then run QA once more.
 
@@ -625,7 +625,7 @@ Re-spawn the responsible engineer once, with QA's failure report, then run QA on
 3. Print who you are re-spawning and why, then spawn. The brief is the one from 6b, cut down to the issues involved, plus: that this is a retry after QA and the only one; QA's failure text, word for word; and that the fix belongs in the code, not in the existing tests. For a regression failure QA could not tie to one issue, hand the engineer all of its issues from this batch as the likely cause.
 4. When the retry returns, spawn `qa-engineer` again with the same prompt as before, adding the files the retry changed. This second report replaces the first for step 8.
 
-Whatever the second report says, do not retry again and do not run QA a third time. If it still shows a failure, the issues it fails stay `approved` and the run ends in `REFINE_NEEDED`.
+Whatever the second report says, do not retry again and do not run QA a third time. If it still shows a failure, the issues it fails, and the issues a regression failure implicates under the rule in step 8a, stay `approved` and the run ends in `REFINE_NEEDED`.
 
 ---
 
@@ -635,9 +635,11 @@ Whatever the second report says, do not retry again and do not run QA a third ti
 
 This step and 8b cover the issues sent to build (see step 4c). A `dropped` or `needs-info` issue was never built: leave its status and its Results section exactly as they are.
 
-An issue sent to build becomes `built` when all of these are true: every engineer it was sent to returned `done` or `no change needed`, QA's result for the issue is `pass`, and the regression run did not fail. Change its header to `Status: built`.
+An issue sent to build becomes `built` when all of these are true: every engineer it was sent to returned `done` or `no change needed`, QA's result for the issue is `pass`, and no regression failure implicates it. Change its header to `Status: built`.
 
-Every other issue sent to build stays `approved`. That covers an issue an engineer failed, an issue QA failed, and, when the regression run failed, every issue of the batch that QA did not clear of the failure.
+A regression failure is a failing existing test or a failing frontend build in QA's last report. For each one, the report names the issues QA believes are implicated, or says "cannot tell". The issues QA names are implicated. If QA says "cannot tell" for any regression failure, every issue sent to build is implicated. This is the only rule for a regression failure: an issue it does not implicate still becomes `built` if its own checks passed.
+
+Every other issue sent to build stays `approved`. That covers an issue an engineer failed, an issue QA failed, and an issue a regression failure implicates.
 
 An issue with untested items can still be `built`. Built means the code is in and the automated checks that could run have passed; the untested items go to the user as a click-through list.
 
@@ -661,7 +663,7 @@ Batch <N>, <today's date>.
 - <one thing for the user to do and what they should see, using the exact on-screen labels>
 ```
 
-For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list. Start that line with `**Failed:**`, and say that one retry was made and what it reported, so the user reads both attempts. If the issue itself was sound but the regression run failed, say that instead and name the failing tests.
+For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list. Start that line with `**Failed:**`, and say that one retry was made and what it reported, so the user reads both attempts. If the issue's own checks passed but a regression failure implicates it, say that instead: name the failing test or the frontend build, and say whether QA named this issue or could not tell.
 
 For a spec-first issue, the "Checked by QA" line also names each story the issue added or changed and QA's result for it (`pass`, `fail`, or `untested`). An issue with a story check that failed is not `built`.
 

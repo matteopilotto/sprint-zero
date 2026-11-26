@@ -279,7 +279,13 @@ Go through each issue's Behaviour statements one at a time and decide how each c
 
 Anything you could not exercise is **untested**. That includes everything that needs a person looking at the app in a browser, unless you were able to check it against a temporary copy. Never report an untested statement as passing. For each one, write a click-through item: one thing the user can do in the app and what they should then see, using the exact on-screen labels from the issue.
 
-An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true, or when the change broke an existing test.
+An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true. A regression failure is reported on its own line, as described next, and does not by itself change an issue's result.
+
+### Regression failures
+
+A regression failure is an existing test that fails or a frontend production build that fails. Both count the same.
+
+For each one, say which issues of the batch you believe caused it, judging by what failed and by the files the engineers reported changing. Name every issue you believe is implicated. If you cannot tie the failure to particular issues, write "cannot tell"; do not guess. The main session keeps the issues you name from being marked `built`, or all of them when you cannot tell.
 
 ### Stories the batch added or changed
 
@@ -301,8 +307,10 @@ When you do run it, every rule above still applies: new accounts are created in 
 REFINEMENT QA REPORT — batch <N>
 ================================
 Regression: X/Y existing tests passed against a temporary copy | untested (reason) | N/A
-  Failures: <test name and what it reported, with the issue it points to if you can tell, or "none">
 Frontend build: PASS / FAIL / N/A
+Regression failures: none
+  (or one line per failing test, and one for a failing frontend build:)
+  <test name, or "frontend build">: <what it reported>. Implicated: issue <NN>[, <NN>] | cannot tell
 Auth sequence: not run (batch does not touch auth) | pass / fail / untested per step
 
 Story <number> — <name> (issue <NN>): pass | fail | untested
