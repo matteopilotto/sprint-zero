@@ -15,7 +15,7 @@
 **Capstone of [Module 2 — Skills, Subagents & Orchestration](../../README.md)** in the Agent Engineering Bootcamp.
 Built by **[Yousuf Alvi](https://github.com/yousuf-alvi)** · **[Hamza Farooq](https://www.linkedin.com/in/hamzafarooq/)**
 
-[**Quick start**](#-quick-start) · [**How it flows**](#how-it-flows) · [**The agent team**](#the-agent-team) · [**Build options**](#build-configuration) · [**Demo mode**](#sprint-zero----present-mode)
+[**Quick start**](#-quick-start) · [**How it flows**](#how-it-flows) · [**The agent team**](#the-agent-team) · [**Build options**](#build-configuration) · [**Changing your build**](#changing-your-build-afterwards) · [**Demo mode**](#sprint-zero----present-mode)
 
 </div>
 
@@ -288,6 +288,38 @@ Pass `--no-launch` to `/sprint-zero` if you'd rather wire it up by hand.
 
 ---
 
+## Changing your build afterwards
+
+The first run gives you a baseline: the build as Sprint Zero first produced it. You will want to change it, and you do not need to know which files are involved. Tell `/sprint-zero-refine` what you want in plain words, as many things at once as you like:
+
+```
+/sprint-zero-refine the title is cut off on small screens, and deleting a contact should ask "Are you sure?" first
+```
+
+Each thing you ask for is a refinement, and the ones you ask for together are a batch. Here is what happens to a batch.
+
+1. **Each request is written down as an issue.** An issue is a short file in `docs/issues/` that quotes your words and lists what will be true once the change is built. You get a table of the issues in the chat.
+2. **Nothing changes until you approve.** Read the issues, edit the files if something is off, then reply "approve". You can leave some out ("approve all but 05"). Add `--no-confirm` if you would rather not be asked.
+3. **The same engineers make the change.** A bug fix or a polish item goes straight to code. A changed behaviour or a new feature updates the spec set first, so the user stories and the API contract keep describing the product as it is.
+4. **QA checks it without touching your data.** The tests run against a temporary copy with fresh demo data. The seed script is never run against your build, so the accounts and records you created stay put.
+5. **You get a summary.** It shows each issue, what was checked automatically, and a short list of things to click through yourself.
+
+An issue is `built` when the code is in and the automated checks pass. It becomes `confirmed` only when you say you have tried it and it works; the next time you run the command it reminds you of anything still waiting.
+
+A few things worth knowing:
+
+- If your build has uncommitted changes, the command suggests committing first so you have a restore point. It never commits for you; it prints the commit command at the end instead.
+- If the app is already running, it asks before restarting anything. Pass `--no-launch` to start the app yourself.
+- A standing instruction such as "never open a browser on this build" is saved as a house rule in `docs/build-notes.md` and followed in every later batch.
+- If a change fails twice, the run stops with `REFINE_NEEDED`. Run `/sprint-zero-refine` again with no request to retry what is left.
+- A build you moved into another folder can still be changed: put the folder first, as in `/sprint-zero-refine examples/my-build <your requests>`.
+
+Two requests are turned down, with an explanation, while the rest of your batch carries on. Switching the project type, stack profile, or data layer needs a new baseline from `/sprint-zero`. Raising the scope level (say `MVP` to `Prod`) is not supported yet.
+
+Once a build is finished, running plain `/sprint-zero` on it again stops and points you here, so you cannot start over by accident. `--fresh` and `--rebuild` still start over when that is what you want.
+
+---
+
 ## Start the app manually
 
 You can skip auto-launch with `/sprint-zero <url> --no-launch`, or run these steps any time afterward. Commands follow your stack profile — the `node-react` + `local` default looks like this:
@@ -332,6 +364,7 @@ sprint-zero/
 ├── .claude/
 │   ├── commands/                    ← slash commands (the pipeline)
 │   │   ├── sprint-zero.md             main orchestrator
+│   │   ├── sprint-zero-refine.md      changes a finished build, one batch at a time
 │   │   ├── sprint-zero-scope.md       scoping question → scope.md
 │   │   ├── explain-me-a-repo.md       research → reference-brief.md
 │   │   ├── prd-generator.md           → prd.md
