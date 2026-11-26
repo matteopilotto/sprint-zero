@@ -41,7 +41,7 @@ Batch 1, 2026-11-26.
 
 **Untested:** everything on screen. Nothing was checked in a browser before the click-through below was handed to the user.
 
-**Notes:** the "Camera only" half of this issue depended on issue 02, which was built in the same batch.
+**Notes:** the "Camera only" half of this issue depended on issue 02, which was built in the same batch. Tried by the user on 2026-11-26, in part. The original issue records that hide works, but the "still recording" text is cut off in the round bubble (now issue 04). "Dim" was not mentioned, so this issue stays `built` until the user confirms it.
 
 **Click-through:**
 
@@ -51,5 +51,3 @@ Batch 1, 2026-11-26.
 - Least certain: a hidden view while the recorder tab is in the background. Record with "Hide" on, switch tabs, and check the saved video.
 - The round placeholder text may look cramped in "Screen + camera".
 - "Dim" is still selected after reloading `/record`.
-
-**Tried by the user:** 2026-11-26, in part. The original issue records that hide works, but the "still recording" text is cut off in the round bubble (now issue 04). "Dim" was not mentioned, so this issue stays `built` until the user confirms it.

@@ -2,7 +2,7 @@
 
 This folder is a Sprint Zero build with three refinement batches on top of its baseline. It is a local-first screen recorder that runs in the browser: the browser captures and encodes the video, and a small local server stores and serves the files.
 
-Configuration: project type `web-app`, stack `node-react`, data layer `local`, level `MVP`.
+Configuration: project type `web-app`, stack profile `node-react`, data layer `local`, scope level `MVP`.
 
 ## Paths
 

@@ -41,6 +41,8 @@ Batch 2, 2026-11-26.
 
 **Untested:** everything on screen. Nothing was checked in a browser, and the original issue says this one has the most unknowns.
 
+**Notes:** tried by the user on 2026-11-26, and not accepted. The original issue records that the floating buttons are in the recording, and they must not be. This was assumed to be an entire-screen share, the only case where a separate window can be captured; the user has not confirmed that assumption. The fix was built in the same batch: when the entire screen is shared, the floating window closes before recording starts and the recorder page says why. Story 26 and `docs/decisions.md` were updated with it. The user has not tried the fix, so this issue stays `built`. An open question from the original issue, how to control a whole-screen recording from elsewhere, led to issue 08.
+
 **Click-through:**
 
 First build:
@@ -60,7 +62,3 @@ After the entire-screen fix:
 
 - Share the entire screen: the floating window closes during the countdown, the notice "Floating controls are closed because you are sharing your entire screen…" shows, and the saved video has no floating window.
 - Share a tab or a window: the floating window stays open and is not in the video.
-
-**Tried by the user:** 2026-11-26, and not accepted. The original issue records that the floating buttons are in the recording, and they must not be. This was assumed to be an entire-screen share, the only case where a separate window can be captured; the user has not confirmed that assumption. The fix was built in the same batch: when the entire screen is shared, the floating window closes before recording starts and the recorder page says why. Story 26 and `docs/decisions.md` were updated with it. The user has not tried the fix, so this issue stays `built`.
-
-An open question from the original issue, how to control a whole-screen recording from elsewhere, led to issue 08.

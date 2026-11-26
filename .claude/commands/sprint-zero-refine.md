@@ -673,10 +673,14 @@ Batch <N>, <today's date>.
 
 **Untested:** <what QA could not check and why, or "nothing">
 
+**Notes:** <optional free text: the cause, the fix, or what the user reported after trying it>
+
 **Click-through:**
 
 - <one thing for the user to do and what they should see, using the exact on-screen labels>
 ```
+
+The `**Notes:**` line is optional. Leave it out when there is nothing to add.
 
 For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list. Start that line with `**Failed:**`, and say that one retry was made and what it reported, so the user reads both attempts. If the issue's own checks passed but a regression failure implicates it, say that instead: name the failing test or the frontend build, and say whether QA named this issue or could not tell.
 
