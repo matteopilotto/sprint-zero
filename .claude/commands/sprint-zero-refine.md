@@ -768,7 +768,7 @@ For a `cli-tool` there is nothing to start. Print one example command and go to 
 4. Open the app: the frontend address for a `web-app`, the API's address for an `api-service`, each on its resolved port. Use `open`, `xdg-open`, `wslview`, or `cmd.exe /c start` as the system provides. If none works, print the address instead.
 5. Print the addresses, the process IDs, and how to stop each one later by its process ID (`kill <pid>`). Print no demo login: the seed was not run, and the user's own accounts are still there.
 
-If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it. Go to 8f.
+If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it. Whether or not every part came up, go to 8f.
 
 **If something is listening on any of the build's ports**, treat the app as running. Stop nothing and start nothing yet. Print which ports are in use and by what (the process ID from the check above and its command line, `ps -p <pid> -o command=`), then:
 
