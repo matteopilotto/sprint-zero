@@ -112,6 +112,8 @@ We built a screen recorder that runs in the browser and keeps every recording on
 
 ### One quality level, WebM format
 
+_The "one quality level" part was reversed in refinement batch 3: see "Refinement batch 3" below. WebM stays._
+
 - **Reference does:** Records at 720p on the free plan and up to 4K on paid plans, and delivers widely playable video.
 - **We chose to:** Record at whatever resolution the browser captures and save it as a WebM file.
 - **Reason:** WebM is what browsers produce with no extra software. Converting to MP4 would add a heavy dependency, which rule 5 of this kit advises against.
@@ -200,7 +202,7 @@ Tradeoffs made while building the recorder and library screens.
 - **Person detection library.** Blur and Custom image use the older MediaPipe selfie segmentation package because it ships its program and model files inside the npm package. A small script copies them into the app's public folder whenever the app is started or built, so nothing is downloaded while the app runs and no file had to be fetched by hand.
 - **Recordings are tidied up in the browser before saving.** Browser-made video files have no length and no seek index, and in testing Chrome failed to jump around in them. After Stop, the browser rewrites the file (without re-encoding the picture or sound) so it has both, using one extra dependency, `mediabunny`. If that step fails, the original file is saved instead. The cost is a short extra wait and roughly double the memory at the moment of saving.
 - **Older files without a length still play.** The player tries the usual trick to discover the length; if the browser refuses, it reloads the video and plays it without a working scrub bar until it has been played through once.
-- **VP8 video.** Recordings use the VP8 format because it is lighter on the machine than VP9 while the camera effects are running. Files are somewhat larger.
+- **VP8 video.** Recordings use the VP8 format because it is lighter on the machine than VP9 while the camera effects are running. Files are somewhat larger. (Refinement batch 3 narrowed this: VP9 is now used when no camera effect is running and the quality is "720p" or "1080p".)
 - **Screen + camera recordings are capped at 1920 pixels on the long edge.** Larger screens are scaled down so drawing the bubble 30 times a second stays smooth. Screen only recordings keep the screen's own size.
 - **Duration is rounded down.** The saved duration is the whole seconds shown on the timer when Stop was pressed, so a 5.9 second file is listed as 00:05.
 - **Camera stays on after cancelling a take.** Cancelling returns to the setup screen, where the live preview needs the camera, so only the screen and microphone are released. Stopping (saving) or choosing "Screen only" turns the camera off.
@@ -246,3 +248,17 @@ One polish item, one bug fix, and two features added after the second round of h
 - **Media keys work by playing silence.** The browser only sends media keys to a page that is playing something, so the recorder plays a silent sound for the length of the take. The costs: the keys do not control a music player during a recording, there is no key for cancel (and discarding a take on one key press with no confirmation would be risky), and it relies on browser behaviour that could change. A "Media key shortcuts" switch turns it off.
 - **The recorder starts a quarter of a second after the countdown ends.** Starting in the same instant put the countdown's last "1" in the first frame of the video, because the screen had not yet redrawn. The page now removes the countdown first, then starts recording. The timer and the saved duration count from the moment recording really starts.
 - **"Computer audio", "Floating controls", and "Media key shortcuts" are remembered when a recording starts**, like the microphone setting.
+
+## Refinement batch 3
+
+One feature: better recording quality, with a choice of resolution.
+
+- **A choice of video quality is now in.** This reverses the "one quality level" part of the earlier "One quality level, WebM format" cut. "Video quality" offers "720p", "1080p", and "Original", and starts on "1080p": sharp enough for text on most screens without the file sizes of a full high-density screen.
+- **The quality names are limits, not exact sizes.** The picture is fitted inside 1280 by 720 or 1920 by 1080 with its shape kept, and is never enlarged. A screen that is not 16:9 gives a slightly smaller picture rather than black bars. "Original" stops at 4K (3840 by 2160), because larger pictures are too heavy to encode in the browser.
+- **The data rate now follows the picture size.** Before, the browser was left to pick, and it spends about 2.5 Mbps whatever the size, which was the main cause of blurry text. The recorder now asks for about 2.5 Mbps at 720p, 5 Mbps at 1080p, and up to 20 Mbps at 4K, plus 128 kbps for sound. These are ceilings: a screen that is not changing uses far less. The cost is larger files for busy pictures, roughly 40 MB a minute at 1080p at worst.
+- **VP9 where the machine can afford it.** This narrows the earlier "VP8 video" decision. VP9 looks better at the same size but is heavier to encode, so it is used only at "720p" and "1080p" with no camera background effect running. With "Blur" or "Custom image", and at "Original", recordings stay VP8.
+- **"Camera only" follows the quality setting.** This replaces the batch 1 tradeoff that fixed camera-only video at 640 by 480. The camera is opened at 1280 by 720 for "720p" and at 1920 by 1080 for "1080p" and "Original"; a camera that cannot do that gives its nearest size. With a background effect on it stays at 1280 by 720 at most, because the effect is redrawn for every frame.
+- **The camera in "Screen + camera" stays at 640 by 480.** The bubble is about a quarter of the frame's shorter side, so even at 4K it is drawn no larger than the camera picture already is. A bigger camera picture would cost speed and show nothing.
+- **Switching between "Screen + camera" and "Camera only", or changing the quality in "Camera only", restarts the camera for a moment**, because it has to be reopened at a different size. The size is fixed once a recording starts.
+- **The quality is not stored with the recording.** It is a recorder setting kept in the browser, like the others, so the server and the contract are unchanged.
+- **Still 30 frames a second.** A higher frame rate was not asked for and would double the work of drawing the bubble.

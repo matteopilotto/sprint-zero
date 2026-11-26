@@ -27,7 +27,7 @@ From the scope excludes:
 Also out of scope at this level, although Loom offers them:
 
 - Cloud storage, share links, embedding, and privacy settings. Nothing is uploaded anywhere.
-- Custom capture areas. (Computer audio was added in refinement batch 2; see user story 25.)
+- Custom capture areas. (Computer audio was added in refinement batch 2; see user story 25. A choice of video quality was added in refinement batch 3; see user story 28.)
 - Drawing tools, mouse highlighting, and blurring parts of the screen.
 - Folders, search, thumbnails, and archiving in the library.
 - Letter-key shortcuts that work from other applications. (Floating controls and media key shortcuts were added in refinement batch 2; see user stories 26 and 27.)

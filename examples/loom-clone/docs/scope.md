@@ -30,6 +30,7 @@ A local-first screen recorder that runs in the browser, working like Loom's reco
 - Camera only, with the camera filling the whole frame. (Added in refinement batch 1.)
 - Microphone audio is included in every mode and can be turned off.
 - Computer audio (the sound the computer is playing) can be included in the two screen modes, when the browser's share prompt shares it. (Added in refinement batch 2.)
+- Video quality can be chosen in every mode: 720p, 1080p, or the original size of what is captured, up to 4K. (Added in refinement batch 3.)
 
 ### Camera background
 

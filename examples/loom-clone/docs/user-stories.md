@@ -234,7 +234,7 @@ _Added in refinement batch 1._
 - Given a camera-only recording is saved, when it is played, then the camera fills the whole frame with no bubble, and its mode is stored as `camera`.
 - Given "Camera only" is selected, when the user looks at the recorder before or during a recording, then a "Camera view size" control offers "Small", "Medium", and "Large", with "Large" selected.
 - Given a camera-only recording is in progress, when the user switches "Camera view size", then the camera view on the page changes size immediately and the recording continues without interruption.
-- Given two camera-only recordings made at different "Camera view size" settings, when both are played, then both show the full camera frame at the same resolution.
+- Given two camera-only recordings made at different "Camera view size" settings, when both are played, then both show the full camera frame at the same resolution (the resolution comes from "Video quality", story 28, not from the view size).
 - Given "Camera only" is selected, when the microphone toggle, camera background, countdown, timer, pause, resume, stop, and cancel are used, then they behave exactly as in "Screen + camera".
 - Given a camera-only recording has stopped, when the user looks at the browser, then the camera and microphone indicators have turned off.
 
@@ -343,6 +343,28 @@ Known limits: there is no media key for cancel, and while a recording is in prog
 **Priority:** Must-have
 **Effort:** Small
 
+### Story 28 — Video quality
+
+_Added in refinement batch 3._
+
+**Story:** As a signed-in user, I want to choose the quality of my recording so that text stays sharp when it matters and files stay small when it doesn't.
+
+**Acceptance criteria:**
+
+- Given any recording mode is selected on `/record`, when the page opens for the first time, then a "Video quality" control offers "720p", "1080p", and "Original", with "1080p" selected.
+- Given "720p" or "1080p" is selected, when a screen recording is saved and played, then the picture fits inside 1280 by 720 or 1920 by 1080 respectively, keeps the shape of what was shared, and is never enlarged beyond what was shared.
+- Given "Original" is selected, when a screen recording is saved and played, then the picture is the size the browser captured, up to 3840 by 2160.
+- Given "Camera only" is selected with the background set to "None", when a recording is saved at "720p", then the video is 1280 by 720, and at "1080p" or "Original" it is 1920 by 1080, or the nearest size the camera offers.
+- Given "Camera only" is selected with "Blur" or "Custom image", when a recording is saved at any quality, then the video is at most 1280 by 720, so the effect keeps up.
+- Given "Screen + camera" is selected, when a recording is saved at any quality, then the bubble is the same share of the frame as before and in the chosen corner.
+- Given a recording is made at "1080p" of a screen showing text, when it is played at full size, then the text is clearly readable, without the blockiness of recordings made before this change.
+- Given a user last recorded with "720p", when they next open `/record` in the same browser, then "720p" is still selected.
+
+Known limits: a higher quality makes a larger file and asks more of the computer; "Original" on a very large screen is the heaviest. The quality cannot be changed during a recording.
+
+**Priority:** Must-have
+**Effort:** Medium
+
 ## Should-have
 
 ### Story 17 — Camera preview
@@ -401,6 +423,7 @@ Known limits: there is no media key for cancel, and while a recording is in prog
 **Acceptance criteria:**
 
 - Given a user last recorded with "Screen + camera", microphone off, and "Blur", when they next open `/record` in the same browser, then those three choices are preselected.
+- Given a user last recorded with a "Video quality" other than "1080p", when they next open `/record` in the same browser, then that quality is preselected.
 - Given a user last used "Custom image", when they next open `/record`, then the background falls back to "None", because the image itself is not kept.
 
 **Priority:** Should-have

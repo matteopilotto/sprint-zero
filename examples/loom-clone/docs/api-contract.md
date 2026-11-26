@@ -30,7 +30,7 @@ The backend allows cross-origin requests from the frontend at `http://localhost:
   - `mime_type` — string, for example `"video/webm"`.
   - `created_at`, `updated_at` — ISO 8601 strings.
 
-The camera background, microphone setting, computer audio setting, floating controls setting, media key shortcuts setting, bubble position, mirror setting, and camera view (show, dim, hide, and its size) are recorder settings that live only in the browser. They are not stored and have no endpoints.
+The camera background, microphone setting, computer audio setting, video quality setting, floating controls setting, media key shortcuts setting, bubble position, mirror setting, and camera view (show, dim, hide, and its size) are recorder settings that live only in the browser. They are not stored and have no endpoints.
 
 ## Endpoints
 
