@@ -314,6 +314,27 @@ Do not add refinements the user did not ask for, and do not fold a request into 
 
 An instruction about how the build may be worked on ("do not drive a browser", "never restart my server") is not a refinement and gets no issue. Handle it as "Build notes" above describes: confirm the wording of a standing rule with the user before going on to step 3, and simply follow a one-off instruction for this batch.
 
+**Two kinds of request are declined.** Neither is a refinement, so neither gets an issue file, a place in the table, or a number, and nothing is built for it.
+
+- **A change to the build configuration**: a different project type, stack profile, or data layer than `<build>/docs/scope.md` records. "Move it to Supabase", "rewrite the frontend in Next.js", and "turn it into a command-line tool" are all of this kind. A refinement changes one thing in the build as it stands; a different configuration means different code throughout, which is a new baseline.
+- **A rise in scope level**: `clickable` to `MVP`, or `MVP` to `Prod`, whether the user names the level or describes it ("make it production ready", "harden the whole app"). Raising the level reworks the whole build instead of changing one thing, and this command does not support it yet.
+
+Judge by what is asked, not by the words used. One specific change is an ordinary refinement even when it is the kind of thing a higher scope level would include: "show a message when the upload fails" gets an issue; "add error handling everywhere" is a rise in scope level. If you cannot tell which is meant, treat it as an ambiguous request and ask in step 2e.
+
+Tell the user as soon as the prompt is split, before any question from step 2e and before any issue is written. Quote each declined request and give its reason, using whichever of these applies:
+
+> I am not taking this one on: "<the user's words>"
+>
+> It asks for a different <project type | stack profile | data layer>, and that cannot be done as a refinement: it needs a new baseline. A new baseline is made by `/sprint-zero`, which builds at the repo root and, run with `--fresh --rebuild`, replaces the build that is there. Commit this build or move it to another folder first if you want to keep it.
+
+> I am not taking this one on: "<the user's words>"
+>
+> It asks to raise the scope level from `<current level>` to `<level asked for>`, and that is not supported yet. I can still make specific changes one at a time: tell me which screen or behaviour to improve and each becomes its own refinement.
+
+`--no-confirm` does not change this: a declined request stays declined, and the message is still printed.
+
+A declined request never holds up the rest of the prompt. Carry on to 2c with the remaining refinements, which are written, approved, and built as usual. If every request in the prompt was declined, stop after the message: write no issue file, start no batch, and change nothing.
+
 ### 2c. Work out the area
 
 For each refinement, read as much of the build as you need to decide whether the change belongs to the server, the client, or both, and to find the exact on-screen labels involved. Read only; change nothing.
