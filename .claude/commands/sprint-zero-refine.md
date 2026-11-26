@@ -25,7 +25,11 @@ A plain instruction in the request has the same effect as `--no-confirm`: "go ah
 
 These apply in every step. Later steps do not repeat them.
 
-1. Nothing in the spec set or the code changes before the user approves in step 4. Until then, the only files this command writes are the new issue files and the build notes.
+1. Before the user approves in step 4, no code changes, and no file in the spec set changes other than issue files and the build notes. The writes allowed before approval are these four and no others:
+   - this batch's new issue files, and edits to them that the user asks for (steps 3 and 4b);
+   - the build notes: creating the file, and adding a house rule whose wording the user has agreed (see "Build notes");
+   - marking an earlier issue `confirmed` when the user says they tried it (step 1b);
+   - updating an earlier `needs-info` issue whose question the user has now answered (step 3).
 2. You never edit build code yourself, however small the change. Code goes to `backend-engineer` and `frontend-engineer`. You may read code to write a better issue.
 3. Do not invoke `tech-lead`. The approved issues are the build brief.
 4. You are the only one who writes issue files. Engineers and QA return results to you, and you record them.
@@ -271,7 +275,7 @@ An issue becomes `confirmed` only when the user says they have tried it and it w
 1. Change the issue's header to `Status: confirmed`.
 2. Add one line at the end of its Results section: `**Confirmed:** by the user, <today's date>.`
 
-Change nothing else in the file. This is the one edit to an existing issue file that may happen before the approval in step 4; it touches no spec file and no code.
+Change nothing else in the file. Rule 1 allows this edit before the approval in step 4: it touches no code and no other file.
 
 Nothing else makes an issue `confirmed`: not a QA pass, not a clean regression run, not your own reading of the code, and not the user's silence. If the user asks for an issue to be marked without saying they tried it, ask once whether they have. If the user never answers the offer, leave the issues `built`; they are listed again on the next run.
 
@@ -435,7 +439,9 @@ If no issue of the batch is `proposed`, because every one is `needs-info`, print
 
 ### 4b. Wait
 
-Stop and wait for the user's reply. Do not spawn anyone and do not touch any file while waiting.
+Stop and wait for the user's reply. Do not spawn anyone and do not write to any file while waiting.
+
+When the reply comes, it may hold more than a yes or a no. Before approval, make only the writes rule 1 allows: the edits to this batch's issues described below, an earlier issue the reply says the user tried (step 1b), and a house rule once its wording is agreed (see "Build notes").
 
 If the user asks for a change to an issue, edit that issue file, print the table again, and wait again. If the reply answers the question of a `needs-info` issue, rewrite that issue as step 3 describes for an answered question, set it to `Status: proposed`, print the table again, and wait again.
 
