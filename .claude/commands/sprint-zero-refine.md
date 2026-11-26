@@ -17,6 +17,8 @@ To tell the two apart, look at the first word of `$ARGUMENTS`. If it is plainly 
 
 A plain instruction in the request has the same effect as `--no-confirm`: "go ahead without asking", "no need to confirm", "don't wait for me", "just build it". It counts only when it is about the run as a whole, not when it describes what the build should do ("delete the recording without asking" is a request about the delete button). It is not a refinement, so it gets no issue and is not quoted in one. If you cannot tell which is meant, wait for approval as usual.
 
+`--no-launch` is an optional flag and may appear anywhere in `$ARGUMENTS`. It is not part of any request. With it, this command does not start, restart, or open the app at the end of the batch; it prints the run commands and the user starts the app themselves. See step 8e.
+
 ## Rules that hold for the whole run
 
 These apply in every step. Later steps do not repeat them.
@@ -185,6 +187,32 @@ If `<build>/docs/build-notes.md` exists, read it now. Its house rules apply to y
 
 ---
 
+## Before step 1 — check git
+
+A refinement changes code the user may not have saved yet. Check for a restore point now, before this command writes anything, so that every uncommitted change you find is the user's own and not this batch's.
+
+This command never commits, stages, stashes, branches, or makes any other git write, at any point in the run, even if the user asks. If the user asks you to commit, give them the commands to run themselves.
+
+Run `git -C <build> rev-parse --is-inside-work-tree`.
+
+**If it fails**, the build is not in a git repository (or git is not installed). Print this once, carry on, and do not mention git again in this run, including in step 8d:
+
+> `<build>` is not in a git repository, so there will be no restore point if a change goes wrong. Carrying on.
+
+**If it succeeds**, run `git -C <build> status --porcelain -- .` to list the uncommitted changes inside the build folder. Ignored files, such as the database, do not appear and do not count.
+
+If the list is empty, say nothing and go on to step 1.
+
+If it is not empty, print the changed files (the first ten, then "and <count> more" if the list is longer), followed by:
+
+> The build in `<build>` has uncommitted changes. I recommend committing them first, so you have a restore point if this batch goes wrong. I will not commit for you.
+>
+> Commit in another terminal and reply "continue", or reply "continue" to go ahead as things are, or "stop" to end here.
+
+Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. `--no-confirm` does not skip this wait: it approves the batch in advance, not the risk to unsaved work. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
+
+---
+
 ## Step 1 — Check in
 
 This step has no actions yet. Go to step 2.
@@ -348,6 +376,8 @@ The approved issues are the brief. Each engineer's prompt contains:
 
 Do not paste the issue text into the prompt and do not describe a solution. The engineer reads the files.
 
+The `backend-engineer` prompt also carries the data rule, in these words or close to them: the build's database holds the user's own data; any schema change must be additive and must be applied by the backend itself when it starts, so the records already there survive; the seed script is never run in the build folder.
+
 ### 6c. Collect the results
 
 Each engineer returns one result per issue it was handed: `done`, `failed`, or `no change needed`, with the files it changed. Keep these for step 8.
@@ -441,7 +471,50 @@ After the table, add one or two plain sentences: that `built` means the code is 
 
 If any issue stayed `approved`, say which and point to its Results section.
 
-<!-- Later tickets add to this step: starting or restarting the app, and the suggested commit. -->
+### 8d. Suggest a commit
+
+If at least one issue of the batch is `built`, and the build is in a git repository, end the summary by suggesting a commit. Do not make it yourself. Print the commands for the user to run, with a message that names the batch:
+
+> To save this state, commit it yourself when you are ready (I do not commit for you):
+>
+> ```bash
+> git add <build>
+> git commit -m "Refinement batch <N>: <the built issues' titles, shortened>"
+> ```
+
+If no issue was built, or the git check found no repository, leave this out.
+
+### 8e. Start the app, or ask before a restart
+
+The app may be running, and the user may be in the middle of something in it. Never stop a process without the user's agreement, and never run the seed script here: the backend creates and updates its own tables when it starts.
+
+Use the directories, run commands, and ports resolved from `<build>/docs/scope.md` and `.claude/stacks.md` before step 1. Run every command from inside `<build>`. Do not assume the `node-react` values.
+
+For a `cli-tool` there is nothing to start. Print one example command and finish.
+
+**With `--no-launch`.** Start nothing, stop nothing, and open nothing. Print the run command for each part of the build, with the folder to run it in, and add that a server already running needs a restart to pick up backend changes. Finish.
+
+**Otherwise, check each of the build's ports** to see whether something is listening, for example with `lsof -nP -iTCP:<port> -sTCP:LISTEN` on macOS or Linux, or `netstat -ano | findstr :<port>` on Windows. This only looks; it stops nothing.
+
+**If every port is free**, start the app as the baseline run does, minus the seed:
+
+1. Install dependencies only where they are missing or where an engineer reported changing the dependency file (`package.json` or `requirements.txt`). Print one line per install.
+2. Start the backend (or the single `nextjs` app) in the background with its resolved run command, and record its process ID. Wait two seconds, then check it answers: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<backend-port>/`. Any HTTP response means it is up.
+3. For a `web-app` with a separate frontend, start the frontend the same way and check its port.
+4. Open the app: the frontend address for a `web-app`, the API root (or `/docs` for FastAPI) for an `api-service`. Use `open`, `xdg-open`, `wslview`, or `cmd.exe /c start` as the system provides. If none works, print the address instead.
+5. Print the addresses, the process IDs, and how to stop each one later by its process ID (`kill <pid>`). Print no demo login: the seed was not run, and the user's own accounts are still there.
+
+If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it.
+
+**If something is listening on any of the build's ports**, treat the app as running. Stop nothing and start nothing yet. Print which ports are in use and by what (the process ID from the check above and its command line, `ps -p <pid> -o command=`), then:
+
+- If only the client changed in this batch, say that the changes show after a refresh in the browser and no restart is needed. Finish.
+- If the server changed (the backend engineer reported changed files), say that the backend needs a restart before those changes show, and ask:
+
+  > The backend on port <backend-port> is already running (process <pid>: `<command line>`). It needs a restart to pick up this batch. Restarting it will interrupt anything in progress in the app. Shall I restart it, or will you?
+
+  Wait for the reply. If the user agrees, stop that one process by its process ID with `kill <pid>`, start the backend again with its resolved run command, check it answers, and print its new process ID. Do not use `pkill`, do not stop any other process, and do not touch the frontend. If the user declines or does not answer plainly, leave it running and print the run command so they can restart it themselves.
+- If a part of the build is not running while another is (for example the frontend is up and the backend port is free), say so and ask whether to start the missing part. Start it only on a yes.
 
 <!-- $ARGUMENTS is the interpolation token Claude Code replaces with everything the user typed after /sprint-zero-refine. It must appear in the file for the build folder and the requests to be accessible throughout these instructions. -->
 $ARGUMENTS
