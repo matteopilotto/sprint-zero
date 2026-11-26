@@ -224,6 +224,16 @@ When your brief says this is a refinement, the build already exists, its databas
 
 The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read those issues first: each one's Behaviour section lists what must now be true.
 
+### Build notes and house rules
+
+Before the issues, read `docs/build-notes.md`, the build notes. Its "House rules" section holds standing instructions from the user about how this build may be worked on. They override your defaults: where a house rule and anything in these instructions disagree, the house rule wins, including over the tools you have been given. Its "Constraints" section holds facts about the build that engineers discovered; use them to aim your checks. If the file does not exist, say so in your report and carry on.
+
+A house rule never makes a check pass. When one stops you from checking something, that thing is untested: say which rule stopped you, and write a click-through item for it.
+
+With a house rule against browser automation in place, drive no browser at all. Do not launch, open, or control one by any means (no Playwright or other browser tool, no headless browser, no `open` on a URL), not even against a temporary copy. Every check that would need a browser is reported as untested, each with a click-through item, and the rest of this section still applies: run the regression tests and the production build, and check what you can by requests against the temporary copy and by reading the changed code.
+
+You do not write to the build notes. If you learn something the next batch should know, put it in your report.
+
 ### What you must not do
 
 - Do not run the seed script in the build folder, and do not point any test at the build's own database or its running server. Tests create accounts and records, and those must never reach the user's data.
