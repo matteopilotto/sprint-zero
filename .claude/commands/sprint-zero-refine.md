@@ -119,7 +119,33 @@ If the build is found, read `<build>/docs/scope.md` and resolve its build config
 
 ## Step 1 — Check in
 
-This step has no actions yet. Go to step 2.
+### 1a. Earlier issues the user has not tried
+
+Every run starts here, whether it brings a new request or not.
+
+Look through `<build>/docs/issues/` for issues with `Status: built`. These are issues from earlier batches whose code is in but which the user has not said they tried. If the folder does not exist or holds no such issue, print nothing and go on.
+
+If there are some, print a short list, oldest first, and the offer:
+
+> Built in earlier batches and still waiting for you to try:
+>
+> - 03 <title> (batch 1)
+> - 05 <title> (batch 2)
+>
+> If you have tried any of these in the app and they work, tell me the numbers and I will mark them `confirmed`. You can ignore this; it does not hold up the new batch.
+
+Do not wait for an answer. Carry on with the run in the same turn.
+
+### 1b. Marking an issue confirmed
+
+An issue becomes `confirmed` only when the user says they have tried it and it works. They may say so in the request itself, in their reply at the approval step, or at any later point in the conversation. When they do:
+
+1. Change the issue's header to `Status: confirmed`.
+2. Add one line at the end of its Results section: `**Confirmed:** by the user, <today's date>.`
+
+Change nothing else in the file. This is the one edit to an existing issue file that may happen before the approval in step 4; it touches no spec file and no code.
+
+Nothing else makes an issue `confirmed`: not a QA pass, not a clean regression run, not your own reading of the code, and not the user's silence. If the user asks for an issue to be marked without saying they tried it, ask once whether they have. If the user never answers the offer, leave the issues `built`; they are listed again on the next run.
 
 <!-- Later tickets add to this step: the check-in on earlier issues still `built`, and the git check before a batch starts. -->
 
