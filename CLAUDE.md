@@ -220,7 +220,7 @@ Once a baseline exists, the build's database holds the user's own data, not test
 
 A request to change the build configuration (project type, stack profile, or data layer) is declined: it needs a new baseline. A request to raise the scope level is declined: it is not supported yet. Neither gets an issue, and the other requests in the same prompt go ahead.
 
-`/sprint-zero` has a matching guard. Run without `--fresh` or `--rebuild` on a folder that already holds a finished baseline, it prints a pointer to `/sprint-zero-refine` and stops. A run that was interrupted before finishing still resumes as before.
+`/sprint-zero` has a matching guard. Run without `--fresh` or `--rebuild` on a folder that already holds a finished baseline, it prints a pointer to `/sprint-zero-refine` and stops. A run that was interrupted before finishing still resumes as before. When the spec set and the code are complete but no status file says how the run ended, it asks the user which of the two it is.
 
 ### Worker agents in refinement mode
 

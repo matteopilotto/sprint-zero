@@ -48,9 +48,15 @@ The baseline is **finished** when the code dirs exist and either of these is tru
 1. `.sprint-zero/status.json` says `phase` is `"done"`. This command writes that only once QA has passed and Step 11 has ended.
 2. The build has already been refined, meaning `docs/issues/` or `docs/build-notes.md` exists, and the run got past QA or left no record: `.sprint-zero/status.json` is missing, or its `phase` is `"launch"`, or its `phase` is `"failed"` with `failure.state` `LAUNCH_FAILED`.
 
+One case **cannot be told** from the files. The code dirs and all six spec files (`docs/scope.md`, `docs/reference-brief.md`, `docs/prd.md`, `docs/decisions.md`, `docs/user-stories.md`, `docs/api-contract.md`) exist, `.sprint-zero/status.json` is missing, and neither `docs/issues/` nor `docs/build-notes.md` exists. A finished build looks like this after it has been cloned, copied, or moved, because the status file is not committed. A run that was interrupted late looks the same. Do not resume silently. Ask this one question and wait for the answer:
+
+> This folder holds a full spec set and code, but no record of how the last run ended. Is this a finished build that you want to refine, or an interrupted run that I should resume?
+
+If the user says it is finished, treat the baseline as finished: print the message at the end of this section and stop. If the user says it was interrupted, treat the run as unfinished and resume as "Resumability" describes. If the answer is not clear, ask once more and change nothing until it is.
+
 In every other case the run is **unfinished**, and nothing in this section applies: carry on and resume exactly as "Resumability" describes. That covers a missing `docs/scope.md`, missing code dirs, any `phase` from `"idle"` to `"qa"`, a `"failed"` phase with any other state, and a `"launch"` or `LAUNCH_FAILED` run on a build that has not been refined.
 
-If the baseline is finished, print this and stop. Write no status update, boot no presenter, spawn no one, and do not start or seed the app.
+If the baseline is finished, or the user answered the question above by saying so, print this and stop. Write no status update, boot no presenter, spawn no one, and do not start or seed the app.
 
 > This folder already holds a finished build, so I have stopped without changing anything. Running `/sprint-zero` again is for starting a build, not for changing one.
 >
