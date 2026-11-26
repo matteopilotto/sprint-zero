@@ -38,7 +38,7 @@ export default function RecordPage() {
   // and it is switched off as soon as the recording stops.
   const cameraWanted = settings.mode !== 'screen'
   const supported = canRecord && (settings.mode === 'camera' || canShareScreen)
-  const cameraOn = cameraWanted && ['setup', 'countdown', 'recording', 'paused'].includes(phase)
+  const cameraOn = cameraWanted && ['setup', 'countdown', 'starting', 'recording', 'paused'].includes(phase)
   const camera = useCamera({
     canvasRef: cameraCanvasRef,
     streamRef: cameraStreamRef,

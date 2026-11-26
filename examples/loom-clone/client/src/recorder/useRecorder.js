@@ -1,5 +1,5 @@
 // The recording state machine:
-//   setup -> countdown -> recording <-> paused -> saving -> (saved | save_failed)
+//   setup -> countdown -> starting -> recording <-> paused -> saving -> (saved | save_failed)
 // All timing comes from performance.now() differences, never from counting
 // ticks, so it stays right when the tab is in the background.
 import { useEffect, useRef, useState } from 'react'
@@ -9,6 +9,9 @@ import { createCompositor } from './compositor.js'
 import { makeSeekable } from './makeSeekable.js'
 
 const COUNTDOWN_MS = 3000
+// When the countdown ends the page needs a moment to remove it from the screen.
+// Recording starts this long afterwards, so the last "1" is never in the video.
+const SETTLE_MS = 250
 const MIME_TYPES = ['video/webm;codecs=vp8,opus', 'video/webm']
 const MIC_BLOCKED =
   "Microphone access is blocked. Allow it in your browser's site settings, or turn the microphone off."
@@ -149,14 +152,20 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     take.compositor?.draw()
     if (phaseRef.current === 'countdown') {
       const waited = performance.now() - take.countdownStart
-      if (waited >= COUNTDOWN_MS) beginRecording(take)
-      else setCountdown(3 - Math.floor(waited / 1000))
+      if (waited >= COUNTDOWN_MS) {
+        // Take the countdown off the screen first; recording starts just after.
+        setElapsedSeconds(0)
+        setPhase('starting')
+      } else setCountdown(3 - Math.floor(waited / 1000))
+    } else if (phaseRef.current === 'starting') {
+      if (performance.now() - take.countdownStart >= COUNTDOWN_MS + SETTLE_MS) beginRecording(take)
     } else if (phaseRef.current === 'recording') {
       setElapsedSeconds(Math.floor(elapsedMs(take) / 1000))
     }
   }
 
-  // Runs when the countdown ends, so no countdown frames are in the file.
+  // Runs just after the countdown has left the screen, so no countdown frames
+  // are in the file.
   function beginRecording(take) {
     try {
       const mimeType = MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
@@ -281,7 +290,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   }
 
   // Warn before closing or reloading the tab while a take could be lost.
-  const atRisk = ['countdown', 'recording', 'paused', 'saving', 'save_failed'].includes(phase)
+  const atRisk = ['countdown', 'starting', 'recording', 'paused', 'saving', 'save_failed'].includes(phase)
   useEffect(() => {
     if (!atRisk) return
     const warn = (event) => {
