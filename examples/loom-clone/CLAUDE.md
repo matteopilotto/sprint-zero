@@ -73,7 +73,8 @@ Everything about capture, the camera, segmentation, playback, and download can o
 ## Known limits
 
 - Recordings are WebM and the target browsers are desktop Brave, Chrome, and Edge.
-- Camera-only video is 640x480, because the camera is opened at that size to keep blur and background replacement fast.
+- The camera is opened at 640x480 in "Screen + camera" (the bubble is small). In "Camera only" it follows "Video quality" (1280x720 or 1920x1080), capped at 1280x720 while blur or background replacement is on. The size rules are in `client/src/recorder/quality.js`; the camera reopens when the size changes, which is only allowed in the setup phase.
+- Video is VP9 at "720p" and "1080p" with no camera effect, VP8 otherwise, at a data rate set from the picture size (`quality.js`).
 - A recording is held in browser memory until Stop, so very long recordings are a risk.
 - If saving fails with an expired login, the take is lost.
 
@@ -82,3 +83,5 @@ Everything about capture, the camera, segmentation, playback, and download can o
 Refinement batch 1 (camera-only mode, mirror camera, show/dim/hide camera view): mirror, camera-only, and hide are confirmed in a browser by the user. "Dim" has not been explicitly confirmed (issue 03).
 
 Refinement batch 2 (issues 04 to 08) is built and committed: the "still recording" text fix, the countdown fix (recording starts 250 ms after the countdown leaves the screen, phase `starting`), "Computer audio", and "Floating controls" (Document Picture-in-Picture, `client/src/recorder/useFloatingWindow.js`). The click-through for each is in its issue file. The user reported the floating window appearing in a recording, so it now closes automatically when the entire screen is shared (`wholeScreen` in `useRecorder.js`); that fix is also unconfirmed. Whole-screen recordings are controlled with "Media key shortcuts" (issue 08, `client/src/recorder/mediaKeys.js`: a silent looping sound holds the browser's media session so Play/Pause and Next track reach the page). The user confirmed media keys work in Brave (2026-11-26). The other batch 2 items (issues 04 to 07) have not been explicitly confirmed. Update this section when that changes.
+
+Refinement batch 3 (issue 09, story 28) is built and committed: "Video quality" ("720p", "1080p", "Original"), a data rate that follows the picture size, VP9 where affordable, and a sharper "Camera only". Client only, no contract change. Nothing in it has been confirmed in a browser; the click-through is in the issue file. The points most likely to need adjusting are whether the browser honours the size limit passed to `getDisplayMedia` in "Screen only", and whether "Original" on a large screen records without stutter.
