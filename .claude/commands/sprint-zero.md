@@ -23,7 +23,8 @@ The build and QA phases resume from `.sprint-zero/status.json`, which this comma
 
 - `build.backend` is `"done"` and the backend dir exists → do not re-spawn backend-engineer.
 - `build.frontend` is `"done"` and the frontend dir exists → do not re-spawn frontend-engineer.
-- `phase` is `"launch"` or `"done"` and the code dirs exist → skip straight to Step 11.
+- `phase` is `"launch"` and the code dirs exist → skip straight to Step 11.
+- `phase` is `"done"` and the code dirs exist → the baseline is finished. Do not resume; see "Baseline guard" below.
 - `phase` is `"failed"` → read `failure.state`, print its recovery instruction, and resume at the step that state names.
 
 Anything marked `"running"` when the previous session broke is treated as not done: re-spawn it. Engineers write their dir from scratch when it is missing and build on what exists when it is present, so a re-spawn after a partial build is safe. `--fresh` and `--rebuild` also delete `.sprint-zero/status.json`.
@@ -31,6 +32,35 @@ Anything marked `"running"` when the previous session broke is treated as not do
 If `--fresh` was passed, delete `docs/` and `.sprint-zero/status.json` before step 2 so all spec steps run from scratch.
 
 If `--rebuild` was passed, delete `server/` and `client/` (or `app/`, `cli/`) and reset `build` in `.sprint-zero/status.json` before step 9 so the full build runs from scratch.
+
+## Baseline guard
+
+A finished run leaves a baseline: the spec set and the code as this command first produced them. From then on the build is changed with `/sprint-zero-refine`, not by running this command again. Resuming a finished run would start the app through the seed script, which clears and re-inserts the seed rows and so can wipe what the user has since created in the app.
+
+Run this check at the very start of every run, before Step 0 and before anything is written, started, or deleted. It only reads.
+
+**Skip the check when `--fresh` or `--rebuild` was passed.** Those flags are the user's explicit choice to start over, and they work exactly as described above. No other flag skips it.
+
+Otherwise, decide whether the repo root holds a finished baseline or an unfinished run, using the same evidence the Resumability rules use: `.sprint-zero/status.json` and the code dirs resolved from `docs/scope.md` against `.claude/stacks.md`.
+
+The baseline is **finished** when the code dirs exist and either of these is true:
+
+1. `.sprint-zero/status.json` says `phase` is `"done"`. This command writes that only once QA has passed and Step 11 has ended.
+2. The build has already been refined, meaning `docs/issues/` or `docs/build-notes.md` exists, and the run got past QA or left no record: `.sprint-zero/status.json` is missing, or its `phase` is `"launch"`, or its `phase` is `"failed"` with `failure.state` `LAUNCH_FAILED`.
+
+In every other case the run is **unfinished**, and nothing in this section applies: carry on and resume exactly as "Resumability" describes. That covers a missing `docs/scope.md`, missing code dirs, any `phase` from `"idle"` to `"qa"`, a `"failed"` phase with any other state, and a `"launch"` or `LAUNCH_FAILED` run on a build that has not been refined.
+
+If the baseline is finished, print this and stop. Write no status update, boot no presenter, spawn no one, and do not start or seed the app.
+
+> This folder already holds a finished build, so I have stopped without changing anything. Running `/sprint-zero` again is for starting a build, not for changing one.
+>
+> To change this build (fix a bug, polish a screen, change how something behaves, add a feature), describe what you want in plain words to `/sprint-zero-refine`. For example:
+>
+> `/sprint-zero-refine the save button stays greyed out after an error`
+>
+> To start the app, run: <the resolved run command for each part of the build, with its folder; leave the seed command out>
+>
+> To start over instead, pass a flag. `--rebuild` deletes the code and builds it again from the spec set. `--fresh` deletes the spec set, including any issues and build notes, and writes it again. Both delete work, so commit first if you may want it back.
 
 ## Named failure states
 
@@ -345,6 +375,8 @@ If `--no-launch` was passed, or if QA reported `Ready to demo: NO`, skip this st
 
 > Skipping auto-launch. Start the servers manually — see the "Start the app manually" section in the README.
 
+When the step is skipped only because of `--no-launch`, and QA reported no failures, the run is finished: write the final `phase: "done"` status described under "Status updates per step", leaving `appUrl` and `credentials` as `null`. When QA reported failures, do not write it; the run ended in `QA_NEEDED` and is not finished.
+
 Otherwise, hand the user a working app without making them wire it up themselves. **Resolve the dirs, run commands, and ports from `docs/scope.md` + `.claude/stacks.md` first** — the steps below use the node-react web-app names as the worked example, but substitute the resolved values for other profiles/types.
 
 **Resolved values you need (look them up, do not assume):**
@@ -419,13 +451,15 @@ For step 9 (parallel build), set `build.backend` and `build.frontend` to `"runni
 
 For step 9 (QA), populate the `qa` block as the engineer's report comes back: `contractBackend`, `contractFrontend`, `integration` (`{passed, total}`), `authDance`, and `coreLoop`. Use `"pending"` while a check is in flight, `"pass"`/`"fail"` once it lands, and `"n/a"` for `authDance` when scope is `clickable`.
 
-**On step 11f (launch summary)**, write a final status with:
+**On step 11g (launch summary)**, or at the end of Step 11 for a `cli-tool`, which prints no launch summary, write a final status with:
 
 - `phase: "done"`
 - `appUrl: "http://localhost:<open-port>"` (the resolved UI port from 11f, not a hardcoded 5173)
 - `credentials: { "email": "<from seed stdout>", "password": "<from seed stdout>" }`
 - `projectName: "<the project name from .sprint-zero/meta.json or step 1>"`
 - `message: "Sprint Zero finished. Open the app."`
+
+This `"done"` status is what marks the baseline as finished for the "Baseline guard". Write it only when the run really has ended: never before QA has passed, and never on a named-failure exit.
 
 **On any named-failure exit**, before stopping, write:
 
