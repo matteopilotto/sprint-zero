@@ -114,6 +114,9 @@ input[type='text'], input[type='email'], input[type='password'], select {
 fieldset { border: 0; padding: 0; margin: 0; }
 legend, .field label { font-weight: 600; font-size: 0.9rem; padding: 0; margin-bottom: 0.4rem; }
 .field { display: flex; flex-direction: column; }
+/* A radio group inside a field (the "Video quality" control and its note). */
+.field .choices .choice { font-weight: 400; font-size: 1rem; margin-bottom: 0; }
+.field fieldset + .muted { margin-top: 0.4rem; }
 .choices { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .choice { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; }
 .toggle { font-weight: 600; font-size: 0.9rem; }

@@ -8,13 +8,13 @@ import { createTicker } from './ticker.js'
 import { createCompositor } from './compositor.js'
 import { mixAudio } from './audioMix.js'
 import { makeSeekable } from './makeSeekable.js'
+import { AUDIO_BITS_PER_SECOND, frameLimit, mimeTypes, videoBitsPerSecond } from './quality.js'
 
 const COUNTDOWN_MS = 3000
 // When the countdown ends the page needs a moment to remove it from the screen.
 // Recording starts this long afterwards, so the last "1" is never in the video.
 const SETTLE_MS = 250
 const NO_COMPUTER_AUDIO = "Computer audio isn't being recorded, because no audio was shared in the browser's prompt."
-const MIME_TYPES = ['video/webm;codecs=vp8,opus', 'video/webm']
 const MIC_BLOCKED =
   "Microphone access is blocked. Allow it in your browser's site settings, or turn the microphone off."
 
@@ -78,12 +78,14 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     return canvas ? canvas.captureStream(30) : null
   }
 
-  async function start({ mode, micOn, computerAudio, position, mirror, background }) {
+  async function start({ mode, quality, micOn, computerAudio, position, mirror, background }) {
     if (phaseRef.current !== 'setup' || startingRef.current) return false
     startingRef.current = true
     setError('')
     setNotice('')
-    const take = { mode, chunks: [], pausedTotal: 0, pauseStart: null }
+    const limit = frameLimit(quality)
+    const take = { mode, limit, chunks: [], pausedTotal: 0, pauseStart: null }
+    take.mimeTypes = mimeTypes({ quality, effectOn: mode !== 'screen' && background !== 'none' })
     try {
       if (mode === 'camera') {
         // No screen is shared in this mode, so there is no screen picker.
@@ -98,8 +100,11 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
         try {
           // With "Computer audio" on, the browser's prompt offers to share the
           // sound of a tab or of the whole computer along with the picture.
+          // "Video quality" sets the largest picture the browser may hand over;
+          // it scales the screen down to fit, keeping its shape.
+          const video = { width: { max: limit.width }, height: { max: limit.height }, frameRate: { ideal: 30 } }
           take.displayStream = await navigator.mediaDevices.getDisplayMedia(
-            computerAudio ? { video: true, audio: true, systemAudio: 'include' } : { video: true, audio: false },
+            computerAudio ? { video, audio: true, systemAudio: 'include' } : { video, audio: false },
           )
         } catch (err) {
           // Dismissing the picker is not an error: stay on the setup screen.
@@ -133,7 +138,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
       // through the compositor canvas. Camera only records the camera.
       let videoTrack = take.displayTrack
       if (mode === 'screen_camera') {
-        take.compositor = createCompositor({ displayStream: take.displayStream, getCameraCanvas, position })
+        take.compositor = createCompositor({ displayStream: take.displayStream, getCameraCanvas, position, limit })
         videoTrack = take.compositor.stream.getVideoTracks()[0]
       } else if (mode === 'camera') {
         take.cameraFeed = cameraOnlyFeed(take, !mirror && background === 'none')
@@ -203,8 +208,19 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   // are in the file.
   function beginRecording(take) {
     try {
-      const mimeType = MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
-      take.recorder = new MediaRecorder(take.stream, mimeType ? { mimeType } : undefined)
+      const mimeType = take.mimeTypes.find((type) => MediaRecorder.isTypeSupported(type))
+      // Spend data in proportion to the picture size: the compositor's canvas,
+      // the camera canvas, or the shared screen. If the size cannot be read,
+      // assume the largest the chosen quality allows.
+      const camera = take.mode === 'camera' ? getCameraCanvas() : null
+      const size = take.compositor ?? camera ?? take.stream.getVideoTracks()[0].getSettings()
+      const width = size.width || take.limit.width
+      const height = size.height || take.limit.height
+      take.recorder = new MediaRecorder(take.stream, {
+        ...(mimeType ? { mimeType } : {}),
+        videoBitsPerSecond: videoBitsPerSecond(width, height),
+        audioBitsPerSecond: AUDIO_BITS_PER_SECOND,
+      })
       take.recorder.ondataavailable = (event) => {
         if (event.data.size > 0) take.chunks.push(event.data)
       }

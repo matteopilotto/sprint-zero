@@ -11,7 +11,9 @@ import { drawCamera, drawCameraWithBackground } from './draw.js'
 const SLOW_MS = 250 // average time per frame above which we give up on effects
 const STUCK_MS = 5000
 
-export function useCamera({ canvasRef, streamRef, enabled, background, backgroundImage, mirror, onEffectFailed }) {
+// `size` is the picture size to ask the camera for; a camera that cannot do it
+// gives its nearest size. Changing it reopens the camera.
+export function useCamera({ canvasRef, streamRef, enabled, size, background, backgroundImage, mirror, onEffectFailed }) {
   const [status, setStatus] = useState('off') // off | starting | ready | blocked | error
   const [effectReady, setEffectReady] = useState(false)
 
@@ -35,7 +37,7 @@ export function useCamera({ canvasRef, streamRef, enabled, background, backgroun
     setStatus('starting')
 
     navigator.mediaDevices
-      .getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false })
+      .getUserMedia({ video: { width: { ideal: size.width }, height: { ideal: size.height } }, audio: false })
       .then((cameraStream) => {
         if (cancelled) {
           cameraStream.getTracks().forEach((track) => track.stop())
@@ -66,7 +68,7 @@ export function useCamera({ canvasRef, streamRef, enabled, background, backgroun
       state.video = null
       setStatus('off')
     }
-  }, [enabled])
+  }, [enabled, size.width, size.height])
 
   // Segmentation model, loaded only while Blur or Custom image is selected.
   useEffect(() => {

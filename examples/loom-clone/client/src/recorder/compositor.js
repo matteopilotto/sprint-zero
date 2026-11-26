@@ -2,13 +2,13 @@
 // one canvas, and exposes that canvas as a video stream for the recorder.
 import { drawBubble, drawScreen } from './draw.js'
 
-const MAX_EDGE = 1920 // keep very large screens affordable to draw 30 times a second
-
-export function createCompositor({ displayStream, getCameraCanvas, position }) {
+// `limit` is the largest picture the chosen "Video quality" allows. The screen
+// is fitted inside it and never enlarged.
+export function createCompositor({ displayStream, getCameraCanvas, position, limit }) {
   const settings = displayStream.getVideoTracks()[0].getSettings()
   const sourceWidth = settings.width || 1280
   const sourceHeight = settings.height || 720
-  const scale = Math.min(1, MAX_EDGE / Math.max(sourceWidth, sourceHeight))
+  const scale = Math.min(1, limit.width / sourceWidth, limit.height / sourceHeight)
 
   const canvas = document.createElement('canvas')
   canvas.width = Math.round((sourceWidth * scale) / 2) * 2 // encoders prefer even sizes
@@ -32,6 +32,8 @@ export function createCompositor({ displayStream, getCameraCanvas, position }) {
 
   return {
     stream,
+    width: canvas.width,
+    height: canvas.height,
     draw,
     dispose() {
       stream.getTracks().forEach((track) => track.stop())

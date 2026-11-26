@@ -43,8 +43,11 @@ export function drawCameraWithBackground(ctx, { image, mask, background, backgro
     ctx.setTransform(1, 0, 0, 1, 0, 0) // the image is drawn the right way round
     drawCover(ctx, backgroundImage, backgroundImage.width, backgroundImage.height)
   } else {
-    ctx.filter = 'blur(14px)'
-    ctx.drawImage(image, -24, -24, width + 48, height + 48) // oversize to hide soft edges
+    // Sized for a 640-wide picture and scaled up with it, so the blur looks
+    // equally strong at every camera size.
+    const k = width / 640
+    ctx.filter = `blur(${14 * k}px)`
+    ctx.drawImage(image, -24 * k, -24 * k, width + 48 * k, height + 48 * k) // oversize to hide soft edges
   }
   ctx.restore()
 }

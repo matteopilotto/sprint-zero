@@ -6,6 +6,16 @@ const MODES = [
   { value: 'screen_camera', label: 'Screen + camera' },
   { value: 'camera', label: 'Camera only' },
 ]
+const QUALITIES = [
+  { value: '720p', label: '720p' },
+  { value: '1080p', label: '1080p' },
+  { value: 'original', label: 'Original' },
+]
+const QUALITY_NOTES = {
+  '720p': 'Smaller files. Fine for talking through something; small text may look soft.',
+  '1080p': 'Sharp text on most screens.',
+  original: 'The full size of what you share, up to 4K. Largest files, and it needs a fast computer.',
+}
 const BACKGROUNDS = [
   { value: 'none', label: 'None' },
   { value: 'blur', label: 'Blur' },
@@ -34,6 +44,17 @@ export default function RecorderSetup({ settings, onChange, imageName, onImageCh
         value={settings.mode}
         onChange={(mode) => onChange({ mode })}
       />
+
+      <div className="field">
+        <RadioGroup
+          legend="Video quality"
+          name="quality"
+          options={QUALITIES}
+          value={settings.quality}
+          onChange={(quality) => onChange({ quality })}
+        />
+        <span className="muted">{QUALITY_NOTES[settings.quality]}</span>
+      </div>
 
       <label className="choice toggle">
         <input

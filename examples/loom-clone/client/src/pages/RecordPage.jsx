@@ -6,6 +6,7 @@ import CameraView from '../components/CameraView.jsx'
 import FloatingControls from '../components/FloatingControls.jsx'
 import { loadSettings, saveSettings, saveSettingsPatch } from '../recorder/settings.js'
 import { useCamera } from '../recorder/useCamera.js'
+import { cameraSize } from '../recorder/quality.js'
 import { useRecorder } from '../recorder/useRecorder.js'
 import { canFloat, useFloatingWindow } from '../recorder/useFloatingWindow.js'
 import { canUseMediaKeys, createMediaKeys } from '../recorder/mediaKeys.js'
@@ -69,8 +70,13 @@ export default function RecordPage() {
   const cameraWanted = settings.mode !== 'screen'
   const supported = canRecord && (settings.mode === 'camera' || canShareScreen)
   const cameraOn = cameraWanted && (phase === 'setup' || live)
+  // The camera's size follows the mode, quality and background, but only while
+  // setting up: reopening the camera during a take would break the recording.
+  const sizeRef = useRef(null)
+  if (phase === 'setup' || !sizeRef.current) sizeRef.current = cameraSize(settings)
   const camera = useCamera({
     canvasRef: cameraCanvasRef,
+    size: sizeRef.current,
     streamRef: cameraStreamRef,
     enabled: cameraOn,
     background: settings.background,
@@ -122,6 +128,7 @@ export default function RecordPage() {
     // Called straight from the click so the browser allows the screen picker.
     const starting = recorder.start({
       mode: settings.mode,
+      quality: settings.quality,
       micOn: settings.micOn,
       computerAudio: settings.computerAudio,
       position: settings.position,

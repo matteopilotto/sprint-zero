@@ -1,10 +1,11 @@
-// Remembers the last mode, microphone, computer audio, floating controls, media keys,
+// Remembers the last mode, video quality, microphone, computer audio, floating controls, media keys,
 // background, bubble position, mirror and camera view choices in this browser. A custom image is not kept, so "custom"
 // falls back to "none".
 const KEY = 'loomclone_recorder_settings'
 
 export const DEFAULT_SETTINGS = {
   mode: 'screen',
+  quality: '1080p',
   micOn: true,
   computerAudio: false,
   floatingControls: true,
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS = {
 
 const ALLOWED = {
   mode: ['screen', 'screen_camera', 'camera'],
+  quality: ['720p', '1080p', 'original'],
   background: ['none', 'blur', 'custom'],
   position: ['bottom-left', 'bottom-right', 'top-left', 'top-right'],
   cameraView: ['show', 'dim', 'hide'],
