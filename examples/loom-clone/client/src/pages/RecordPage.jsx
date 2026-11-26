@@ -2,13 +2,14 @@ import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import RecorderSetup from '../components/RecorderSetup.jsx'
 import RecordingStage from '../components/RecordingStage.jsx'
-import { loadSettings, saveSettings } from '../recorder/settings.js'
+import CameraView from '../components/CameraView.jsx'
+import { loadSettings, saveSettings, saveSettingsPatch } from '../recorder/settings.js'
 import { useCamera } from '../recorder/useCamera.js'
 import { useRecorder } from '../recorder/useRecorder.js'
 
 const CAMERA_BLOCKED = "Camera access is blocked. Allow it in your browser's site settings, then try again."
-const supported =
-  Boolean(navigator.mediaDevices?.getDisplayMedia) && typeof window.MediaRecorder !== 'undefined'
+const canRecord = Boolean(navigator.mediaDevices?.getUserMedia) && typeof window.MediaRecorder !== 'undefined'
+const canShareScreen = Boolean(navigator.mediaDevices?.getDisplayMedia)
 
 export default function RecordPage() {
   const navigate = useNavigate()
@@ -17,12 +18,14 @@ export default function RecordPage() {
   const [imageName, setImageName] = useState('')
   const [notice, setNotice] = useState('')
 
-  // One canvas holds the camera picture: it is the round preview on this
-  // page, and the recorder copies the bubble from it.
+  // One canvas holds the camera picture: it is the live view on this page,
+  // and the recorder copies the bubble (or the whole camera-only frame) from it.
   const cameraCanvasRef = useRef(null)
+  const cameraStreamRef = useRef(null)
   const getCameraCanvas = useCallback(() => cameraCanvasRef.current, [])
+  const getCameraStream = useCallback(() => cameraStreamRef.current, [])
   const onSaved = useCallback(() => navigate('/'), [navigate])
-  const recorder = useRecorder({ getCameraCanvas, onSaved })
+  const recorder = useRecorder({ getCameraCanvas, getCameraStream, onSaved })
   const { phase } = recorder
 
   // Segmentation failed to load or is too slow: use the real background.
@@ -31,21 +34,31 @@ export default function RecordPage() {
     setNotice("Background effects aren't available on this device, so your real background is being used.")
   }, [])
 
-  // The camera is on only while Screen + camera is selected, and it is
-  // switched off as soon as the recording stops.
-  const cameraWanted = settings.mode === 'screen_camera'
+  // The camera is on only while Screen + camera or Camera only is selected,
+  // and it is switched off as soon as the recording stops.
+  const cameraWanted = settings.mode !== 'screen'
+  const supported = canRecord && (settings.mode === 'camera' || canShareScreen)
   const cameraOn = cameraWanted && ['setup', 'countdown', 'recording', 'paused'].includes(phase)
   const camera = useCamera({
     canvasRef: cameraCanvasRef,
+    streamRef: cameraStreamRef,
     enabled: cameraOn,
     background: settings.background,
     backgroundImage,
+    mirror: settings.mirror,
     onEffectFailed,
   })
 
   function change(patch) {
     setNotice('')
     setSettings((current) => ({ ...current, ...patch }))
+  }
+
+  // "Camera view" and "Camera view size" can change during a recording, so
+  // they are remembered straight away rather than when a recording starts.
+  function changeView(patch) {
+    setSettings((current) => ({ ...current, ...patch }))
+    saveSettingsPatch(patch)
   }
 
   async function chooseImage(file) {
@@ -63,7 +76,12 @@ export default function RecordPage() {
   if (cameraWanted) {
     const needsEffect = settings.background !== 'none'
     if (camera.status === 'blocked') hint = CAMERA_BLOCKED
-    else if (camera.status === 'error') hint = 'No camera could be used. Choose "Screen only" to record without it.'
+    else if (camera.status === 'error') {
+      hint =
+        settings.mode === 'camera'
+          ? 'No camera could be used. Connect a camera, or choose "Screen only".'
+          : 'No camera could be used. Choose "Screen only" to record without it.'
+    }
     else if (camera.status !== 'ready') hint = 'Starting the camera…'
     else if (settings.background === 'custom' && !backgroundImage) hint = 'Choose an image to use as your background.'
     else if (needsEffect && !camera.effectReady) hint = 'Loading the background effect…'
@@ -76,6 +94,8 @@ export default function RecordPage() {
       mode: settings.mode,
       micOn: settings.micOn,
       position: settings.position,
+      mirror: settings.mirror,
+      background: settings.background,
     })
     if (started) saveSettings(settings)
   }
@@ -89,7 +109,8 @@ export default function RecordPage() {
 
       {!supported && (
         <p className="error" role="alert">
-          Screen recording isn't supported in this browser. Please use desktop Chrome or Edge.
+          {settings.mode === 'camera' ? 'Recording' : 'Screen recording'} isn't supported in this browser. Please use
+          desktop Chrome or Edge.
         </p>
       )}
       {recorder.error && (
@@ -111,20 +132,17 @@ export default function RecordPage() {
             onStart={handleStart}
           />
         ) : (
-          <RecordingStage recorder={recorder} />
+          <RecordingStage recorder={recorder} mode={settings.mode} />
         )}
 
         {cameraOn && (
-          <div className="camera-area">
-            <canvas
-              ref={cameraCanvasRef}
-              className="camera-preview"
-              width="640"
-              height="480"
-              aria-label="Camera preview"
-              data-testid="camera-preview"
-            />
-          </div>
+          <CameraView
+            canvasRef={cameraCanvasRef}
+            mode={settings.mode}
+            settings={settings}
+            onChange={changeView}
+            recording={phase !== 'setup'}
+          />
         )}
       </div>
     </>

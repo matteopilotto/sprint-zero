@@ -21,7 +21,7 @@ function elapsedMs(take) {
   return now - take.recordStart - take.pausedTotal
 }
 
-export function useRecorder({ getCameraCanvas, onSaved }) {
+export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   const api = useApi()
   const apiRef = useRef(api)
   apiRef.current = api
@@ -43,32 +43,55 @@ export function useRecorder({ getCameraCanvas, onSaved }) {
   }
 
   // Ends every screen and microphone track and stops the worker timer, so the
-  // browser's sharing indicators turn off. (The camera is owned by useCamera.)
+  // browser's sharing indicators turn off. (The camera itself is owned by
+  // useCamera, which switches it off when the recording stops; the take only
+  // ends its own copy of the camera picture.)
   function release(take) {
     take.ticker?.stop()
-    take.displayTrack?.removeEventListener('ended', take.onEnded)
+    take.sourceTrack?.removeEventListener('ended', take.onEnded)
     stopTracks(take.displayStream)
     stopTracks(take.micStream)
+    stopTracks(take.cameraFeed)
     take.compositor?.dispose()
   }
 
-  async function start({ mode, micOn, position }) {
+  // "Camera only": the video track to record. With no mirror and no background
+  // effect the camera is recorded as it is; otherwise the camera canvas (which
+  // already has the flip and the background drawn in) is recorded.
+  function cameraOnlyFeed(take, direct) {
+    if (direct) return new MediaStream([take.sourceTrack.clone()])
+    const canvas = getCameraCanvas()
+    return canvas ? canvas.captureStream(30) : null
+  }
+
+  async function start({ mode, micOn, position, mirror, background }) {
     if (phaseRef.current !== 'setup' || startingRef.current) return false
     startingRef.current = true
     setError('')
     const take = { mode, chunks: [], pausedTotal: 0, pauseStart: null }
     try {
-      // The screen picker must come first, straight from the click.
-      try {
-        take.displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
-      } catch (err) {
-        // Dismissing the picker is not an error: stay on the setup screen.
-        if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
-          setError("Screen sharing couldn't start. Please try again.")
+      if (mode === 'camera') {
+        // No screen is shared in this mode, so there is no screen picker.
+        // The camera is already running for the live view.
+        take.sourceTrack = getCameraStream()?.getVideoTracks()[0]
+        if (!take.sourceTrack || take.sourceTrack.readyState === 'ended') {
+          setError('The camera stopped. Check that it is connected, then try again.')
+          return false
         }
-        return false
+      } else {
+        // The screen picker must come first, straight from the click.
+        try {
+          take.displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+        } catch (err) {
+          // Dismissing the picker is not an error: stay on the setup screen.
+          if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
+            setError("Screen sharing couldn't start. Please try again.")
+          }
+          return false
+        }
+        take.displayTrack = take.displayStream.getVideoTracks()[0]
+        take.sourceTrack = take.displayTrack
       }
-      take.displayTrack = take.displayStream.getVideoTracks()[0]
 
       if (micOn) {
         try {
@@ -79,23 +102,35 @@ export function useRecorder({ getCameraCanvas, onSaved }) {
           return false
         }
       }
-      if (take.displayTrack.readyState === 'ended') {
+      // Sharing was stopped (or the camera went away) while we were asking.
+      if (take.sourceTrack.readyState === 'ended') {
         release(take)
+        if (mode === 'camera') setError('The camera stopped. Check that it is connected, then try again.')
         return false
       }
 
-      // Screen only records the screen stream as it is. Only Screen + camera
-      // goes through the canvas.
+      // Screen only records the screen stream as it is. Screen + camera goes
+      // through the compositor canvas. Camera only records the camera.
       let videoTrack = take.displayTrack
       if (mode === 'screen_camera') {
         take.compositor = createCompositor({ displayStream: take.displayStream, getCameraCanvas, position })
         videoTrack = take.compositor.stream.getVideoTracks()[0]
+      } else if (mode === 'camera') {
+        take.cameraFeed = cameraOnlyFeed(take, !mirror && background === 'none')
+        videoTrack = take.cameraFeed?.getVideoTracks()[0]
+        if (!videoTrack) {
+          release(take)
+          setError("The camera picture couldn't be recorded. Please try again.")
+          return false
+        }
       }
       take.stream = new MediaStream([videoTrack, ...(take.micStream?.getAudioTracks() ?? [])])
 
-      // The browser's own "Stop sharing" button ends this track.
+      // The browser's own "Stop sharing" button ends the screen track. In
+      // "Camera only" there is no screen, so the camera track ending (for
+      // example the camera being unplugged) stops the recording instead.
       take.onEnded = () => stop()
-      take.displayTrack.addEventListener('ended', take.onEnded)
+      take.sourceTrack.addEventListener('ended', take.onEnded)
 
       takeRef.current = take
       take.countdownStart = performance.now()
@@ -162,7 +197,8 @@ export function useRecorder({ getCameraCanvas, onSaved }) {
     setPhase('recording')
   }
 
-  // The one stop path, shared by the "Stop" button and "Stop sharing".
+  // The one stop path, shared by the "Stop" button, "Stop sharing", and the
+  // camera going away in "Camera only".
   // Safe to call more than once.
   function stop() {
     const take = takeRef.current

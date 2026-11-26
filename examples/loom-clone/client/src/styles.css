@@ -119,15 +119,40 @@ legend, .field label { font-weight: 600; font-size: 0.9rem; padding: 0; margin-b
 .toggle { font-weight: 600; font-size: 0.9rem; }
 .toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
 
-.camera-area { flex: 0 0 auto; }
-.camera-preview {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  object-fit: cover;
+.camera-area { flex: 0 1 auto; max-width: 100%; display: flex; flex-direction: column; gap: 1.1rem; align-items: flex-start; }
+/* The frame around the live camera picture: a round bubble in
+   "Screen + camera", a rectangle in "Camera only". */
+.camera-view {
+  position: relative;
+  overflow: hidden;
+  box-sizing: content-box;
+  max-width: 100%;
   background: #111;
   border: 4px solid #fff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.camera-view.round { width: 200px; height: 200px; border-radius: 50%; }
+.camera-view.rect { border-radius: 12px; }
+/* "Camera view size" changes only this box on the page, never the video. */
+.camera-view.size-small { width: 240px; }
+.camera-view.size-medium { width: 400px; }
+.camera-view.size-large { width: 560px; }
+.camera-preview { display: block; width: 100%; height: 100%; object-fit: cover; }
+.camera-view.rect .camera-preview { height: auto; }
+/* "Dim" and "Hide" sit on top of the picture on this page only. */
+.camera-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); pointer-events: none; }
+.camera-hidden {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #111;
+  color: #d4d4d4;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .stage { align-items: center; text-align: center; padding: 2rem 1.25rem; }

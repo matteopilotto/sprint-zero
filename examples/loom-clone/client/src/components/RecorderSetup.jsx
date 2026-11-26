@@ -4,6 +4,7 @@ import RadioGroup from './RadioGroup.jsx'
 const MODES = [
   { value: 'screen', label: 'Screen only' },
   { value: 'screen_camera', label: 'Screen + camera' },
+  { value: 'camera', label: 'Camera only' },
 ]
 const BACKGROUNDS = [
   { value: 'none', label: 'None' },
@@ -20,7 +21,8 @@ const POSITIONS = [
 // The controls shown before recording starts.
 export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, onStart }) {
   const fileInput = useRef(null)
-  const cameraOn = settings.mode === 'screen_camera'
+  const cameraOn = settings.mode !== 'screen'
+  const hasBubble = settings.mode === 'screen_camera'
 
   return (
     <div className="card setup" data-testid="recorder-setup">
@@ -71,21 +73,33 @@ export default function RecorderSetup({ settings, onChange, imageName, onImageCh
             </div>
           )}
 
-          <div className="field">
-            <label htmlFor="bubble-position">Bubble position</label>
-            <select
-              id="bubble-position"
-              name="position"
-              value={settings.position}
-              onChange={(e) => onChange({ position: e.target.value })}
-            >
-              {POSITIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <label className="choice toggle">
+            <input
+              type="checkbox"
+              name="mirror"
+              checked={settings.mirror}
+              onChange={(e) => onChange({ mirror: e.target.checked })}
+            />
+            Mirror camera
+          </label>
+
+          {hasBubble && (
+            <div className="field">
+              <label htmlFor="bubble-position">Bubble position</label>
+              <select
+                id="bubble-position"
+                name="position"
+                value={settings.position}
+                onChange={(e) => onChange({ position: e.target.value })}
+              >
+                {POSITIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </>
       )}
 

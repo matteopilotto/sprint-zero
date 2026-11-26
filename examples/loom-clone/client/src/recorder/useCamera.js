@@ -1,21 +1,23 @@
-// Owns the camera while "Screen + camera" is selected. It draws every camera
-// frame (with the chosen background) onto one canvas. That canvas is the
-// round live preview, and the recorder also reads the bubble from it.
+// Owns the camera while "Screen + camera" or "Camera only" is selected. It
+// draws every camera frame (mirrored if asked, with the chosen background)
+// onto one canvas. That canvas is the live view on the page, and the recorder
+// reads the bubble or the full camera-only frame from it. The drawing is
+// driven by the worker ticker, so it keeps going in a background tab.
 import { useEffect, useRef, useState } from 'react'
 import { createTicker } from './ticker.js'
 import { createSegmenter } from './segmenter.js'
-import { drawCameraWithBackground } from './draw.js'
+import { drawCamera, drawCameraWithBackground } from './draw.js'
 
 const SLOW_MS = 250 // average time per frame above which we give up on effects
 const STUCK_MS = 5000
 
-export function useCamera({ canvasRef, enabled, background, backgroundImage, onEffectFailed }) {
+export function useCamera({ canvasRef, streamRef, enabled, background, backgroundImage, mirror, onEffectFailed }) {
   const [status, setStatus] = useState('off') // off | starting | ready | blocked | error
   const [effectReady, setEffectReady] = useState(false)
 
   // Latest settings, readable from the draw loop without restarting it.
   const live = useRef({})
-  live.current = { background, backgroundImage, onEffectFailed }
+  live.current = { background, backgroundImage, mirror, onEffectFailed }
   const run = useRef({ video: null, segmenter: null, busy: false, sentAt: 0, times: [] })
 
   const wantsEffect = enabled && background !== 'none'
@@ -40,6 +42,11 @@ export function useCamera({ canvasRef, enabled, background, backgroundImage, onE
           return
         }
         stream = cameraStream
+        streamRef.current = stream // "Camera only" records from this
+        // The camera was unplugged or taken away by the system.
+        stream.getVideoTracks()[0].addEventListener('ended', () => {
+          if (!cancelled) setStatus('error')
+        })
         video.srcObject = stream
         video.play().catch(() => {})
         state.video = video
@@ -54,6 +61,7 @@ export function useCamera({ canvasRef, enabled, background, backgroundImage, onE
       cancelled = true
       ticker?.stop()
       stream?.getTracks().forEach((track) => track.stop())
+      if (streamRef.current === stream) streamRef.current = null
       video.srcObject = null
       state.video = null
       setStatus('off')
@@ -100,11 +108,11 @@ export function useCamera({ canvasRef, enabled, background, backgroundImage, onE
       canvas.height = video.videoHeight
     }
 
-    const { background, backgroundImage } = live.current
+    const { background, backgroundImage, mirror } = live.current
     const segmenter = state.segmenter
     const useEffectNow = segmenter && (background === 'blur' || (background === 'custom' && backgroundImage))
     if (!useEffectNow) {
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+      drawCamera(canvas.getContext('2d'), video, mirror)
       return
     }
 
@@ -134,13 +142,14 @@ export function useCamera({ canvasRef, enabled, background, backgroundImage, onE
 
   function drawResults(results) {
     const canvas = canvasRef.current
-    const { background, backgroundImage } = live.current
+    const { background, backgroundImage, mirror } = live.current
     if (!canvas || background === 'none') return
     drawCameraWithBackground(canvas.getContext('2d'), {
       image: results.image,
       mask: results.segmentationMask,
       background,
       backgroundImage,
+      mirror,
     })
   }
 
