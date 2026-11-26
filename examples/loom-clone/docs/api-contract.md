@@ -24,13 +24,13 @@ The backend allows cross-origin requests from the frontend at `http://localhost:
 - `Recording` — one saved screen recording. Its details live in SQLite and its video lives as a file on disk in `server/recordings/`. Fields:
   - `id` — UUID v4 string.
   - `title` — string, 1 to 200 characters.
-  - `mode` — `"screen"` or `"screen_camera"`.
+  - `mode` — `"screen"`, `"screen_camera"`, or `"camera"` (camera only, full frame).
   - `duration_seconds` — integer, the recorder's own elapsed time excluding pauses.
   - `size_bytes` — integer, size of the video file.
   - `mime_type` — string, for example `"video/webm"`.
   - `created_at`, `updated_at` — ISO 8601 strings.
 
-The camera background, microphone setting, and bubble position are recorder settings that live only in the browser. They are not stored and have no endpoints.
+The camera background, microphone setting, bubble position, mirror setting, and camera view (show, dim, hide, and its size) are recorder settings that live only in the browser. They are not stored and have no endpoints.
 
 ## Endpoints
 
@@ -161,7 +161,7 @@ The camera background, microphone setting, and bubble position are recorder sett
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `file` | file | yes | The recorded video. Sent with a filename such as `recording.webm` and a `video/webm` content type. |
-| `mode` | text | yes | `screen` or `screen_camera`. |
+| `mode` | text | yes | `screen`, `screen_camera`, or `camera`. |
 | `duration_seconds` | text | yes | Whole number of seconds, `0` or more, from the recorder's timer. |
 | `title` | text | no | 1 to 200 characters. If omitted or blank, the server sets `"Recording — <D MMM YYYY, HH:mm>"` using the server's local time. |
 
@@ -182,7 +182,7 @@ The camera background, microphone setting, and bubble position are recorder sett
 }
 ```
 
-**Notes:** The file is stored as `server/recordings/<id>.webm`; the folder is created on server start if missing and is gitignored. `size_bytes` is measured by the server. `mime_type` is the uploaded file's content type with any codec parameters removed (`video/webm;codecs=vp9,opus` is stored as `video/webm`). Maximum upload size is 2 GB. Returns `400 invalid_input` if `file` is missing or empty, `mode` is not one of the two values, or `duration_seconds` is not a whole number of 0 or more; in that case no file is left on disk. Returns `413 file_too_large` above the size limit.
+**Notes:** The file is stored as `server/recordings/<id>.webm`; the folder is created on server start if missing and is gitignored. `size_bytes` is measured by the server. `mime_type` is the uploaded file's content type with any codec parameters removed (`video/webm;codecs=vp9,opus` is stored as `video/webm`). Maximum upload size is 2 GB. Returns `400 invalid_input` if `file` is missing or empty, `mode` is not one of the three values, or `duration_seconds` is not a whole number of 0 or more; in that case no file is left on disk. Returns `413 file_too_large` above the size limit.
 
 ### PUT /recordings/:id
 

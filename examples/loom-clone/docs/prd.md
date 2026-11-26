@@ -27,7 +27,7 @@ From the scope excludes:
 Also out of scope at this level, although Loom offers them:
 
 - Cloud storage, share links, embedding, and privacy settings. Nothing is uploaded anywhere.
-- Camera-only recording, custom capture areas, and system audio as a separate option.
+- Custom capture areas and system audio as a separate option.
 - Drawing tools, mouse highlighting, and blurring parts of the screen.
 - Folders, search, thumbnails, and archiving in the library.
 - Controls that float over other applications. A web page cannot draw outside its own tab.
@@ -73,6 +73,14 @@ Library:
 15. As a signed-in user, I want to download a recording as a video file so that I can use it outside the app.
 16. As a signed-in user, I want to delete a recording so that I can clear out takes I don't need.
 
+Added in refinement batch 1:
+
+22. As a signed-in user, I want to record the camera only so that I can make a talking-head video.
+23. As a user recording with the camera, I want to mirror the camera so that I look the way I do in a mirror.
+24. As a user recording with the camera, I want to dim or hide my own camera view so that I am not distracted by my face while recording.
+
+Acceptance criteria for stories 22 to 24 are in `docs/user-stories.md`.
+
 ### Should-have
 
 17. As a user setting up a camera recording, I want a live preview of my camera bubble and chosen background so that I can check how I look before I start.
@@ -83,7 +91,6 @@ Library:
 
 ### Nice-to-have
 
-- As a user, I want to record the camera only so that I can make a talking-head video.
 - As a user, I want to include the computer's own sound so that viewers hear what I hear.
 - As a user, I want to resize the camera bubble so that it suits what I'm presenting.
 - As a user, I want recording controls that float above other windows so that I can pause without returning to the recorder tab.

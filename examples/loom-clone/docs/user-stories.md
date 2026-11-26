@@ -64,7 +64,7 @@ Screen names and addresses used throughout: sign-up page `/signup`, login page `
 **Acceptance criteria:**
 
 - Given a signed-in user on `/`, when they click "New recording", then they land on `/record`.
-- Given a user on `/record`, when the page opens, then two options labelled "Screen only" and "Screen + camera" are visible and "Screen only" is selected.
+- Given a user on `/record`, when the page opens, then three options labelled "Screen only", "Screen + camera", and "Camera only" are visible and "Screen only" is selected.
 - Given "Screen + camera" is selected, when a recording is made, then the saved video shows the screen with the camera as a round bubble on top, and the recording's mode is stored as screen plus camera.
 - Given "Screen only" is selected, when a recording is made, then the browser never asks for camera access and the saved video has no bubble.
 
@@ -220,6 +220,64 @@ This story depends on the live camera preview described in story 17, so that pre
 **Priority:** Must-have
 **Effort:** Small
 
+### Story 22 — Camera-only recording
+
+_Added in refinement batch 1._
+
+**Story:** As a signed-in user, I want to record the camera only so that I can make a talking-head video.
+
+**Acceptance criteria:**
+
+- Given "Camera only" is selected on `/record`, when the browser has been given camera access, then a rectangular live camera view (not a round bubble) is visible, the "Camera background" and "Mirror camera" controls are visible, and the "Bubble position" control is not.
+- Given "Camera only" is selected, when the user clicks "Start recording", then the browser does not show a screen-share prompt, the 3, 2, 1 countdown runs, and recording starts.
+- Given a camera-only recording is saved, when it is played, then the camera fills the whole frame with no bubble, and its mode is stored as `camera`.
+- Given "Camera only" is selected, when the user looks at the recorder before or during a recording, then a "Camera view size" control offers "Small", "Medium", and "Large", with "Large" selected.
+- Given a camera-only recording is in progress, when the user switches "Camera view size", then the camera view on the page changes size immediately and the recording continues without interruption.
+- Given two camera-only recordings made at different "Camera view size" settings, when both are played, then both show the full camera frame at the same resolution.
+- Given "Camera only" is selected, when the microphone toggle, camera background, countdown, timer, pause, resume, stop, and cancel are used, then they behave exactly as in "Screen + camera".
+- Given a camera-only recording has stopped, when the user looks at the browser, then the camera and microphone indicators have turned off.
+
+**Priority:** Must-have
+**Effort:** Medium
+
+### Story 23 — Mirror the camera
+
+_Added in refinement batch 1._
+
+**Story:** As a user recording with the camera, I want to mirror the camera so that I look the way I do in a mirror.
+
+**Acceptance criteria:**
+
+- Given "Screen + camera" or "Camera only" is selected on `/record`, when the user looks at the setup controls, then a "Mirror camera" toggle is visible and switched off.
+- Given "Screen only" is selected, when the user looks at `/record`, then the "Mirror camera" toggle is not visible.
+- Given "Mirror camera" is switched on, when the user looks at the live camera view, then the picture is flipped left to right.
+- Given "Mirror camera" is on, when a recording is made in either camera mode, then the camera in the saved video is flipped left to right, matching the preview.
+- Given "Mirror camera" is on and "Custom image" is the camera background, when the user looks at the camera view or the saved video, then the person is flipped but the background image is not.
+- Given "Mirror camera" is on in "Screen + camera", when a recording is made, then the screen content is not flipped.
+- Given a user last recorded with "Mirror camera" on, when they next open `/record` in the same browser, then it is still on.
+
+**Priority:** Must-have
+**Effort:** Small
+
+### Story 24 — Dim or hide my camera view
+
+_Added in refinement batch 1._
+
+**Story:** As a user recording with the camera, I want to dim or hide my own camera view so that I am not distracted by my face while recording.
+
+**Acceptance criteria:**
+
+- Given "Screen + camera" or "Camera only" is selected, when the user looks at the recorder before or during a recording, then a "Camera view" control offers "Show", "Dim", and "Hide", with "Show" selected.
+- Given "Dim" is selected, when the user looks at the camera view on the page, then it is covered by a dark overlay so the picture is only faintly visible.
+- Given "Hide" is selected, when the user looks at the page, then the camera picture is replaced by a dark placeholder reading "Camera hidden", and during a recording the placeholder adds "still recording".
+- Given "Dim" or "Hide" is selected, when a recording is made and played back, then the camera appears in the saved video at normal brightness, exactly as with "Show".
+- Given a recording is in progress, when the user switches between "Show", "Dim", and "Hide", then the page changes immediately and the recording continues without interruption.
+- Given "Hide" is selected, when the user looks at the browser, then the camera indicator is still on, because the camera is still being recorded.
+- Given a user last used "Dim", when they next open `/record` in the same browser, then "Dim" is preselected.
+
+**Priority:** Must-have
+**Effort:** Small
+
 ## Should-have
 
 ### Story 17 — Camera preview
@@ -285,7 +343,6 @@ This story depends on the live camera preview described in story 17, so that pre
 
 ## Nice-to-have
 
-- Record the camera only, as a talking-head video.
 - Include the computer's own sound alongside the microphone.
 - Resize the camera bubble.
 - Recording controls that float above other windows.

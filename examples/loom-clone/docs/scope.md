@@ -27,6 +27,7 @@ A local-first screen recorder that runs in the browser, working like Loom's reco
 
 - Screen only.
 - Screen plus camera, with the camera shown as a round bubble over the screen.
+- Camera only, with the camera filling the whole frame. (Added in refinement batch 1.)
 - Microphone audio is included in both modes and can be turned off.
 
 ### Camera background
@@ -34,6 +35,12 @@ A local-first screen recorder that runs in the browser, working like Loom's reco
 - None (the real background).
 - Blur.
 - Custom image chosen by the user.
+
+### Camera options (added in refinement batch 1)
+
+- Mirror the camera. Applies to the preview and to the saved video.
+- Show, dim, or hide the camera view on the recorder page. This only changes what the person recording sees; the saved video is unaffected.
+- In camera-only mode, the camera view on the recorder page can be made smaller or larger while recording. The saved video is always the full camera frame.
 
 ### Recording controls
 

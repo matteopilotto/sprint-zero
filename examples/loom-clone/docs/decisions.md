@@ -210,3 +210,23 @@ Tradeoffs made while building the recorder and library screens.
 - **Leaving the recorder page inside the app discards the take.** The browser warns before closing or reloading the tab, but clicking "Log out" or the logo mid-recording does not ask first.
 - **An expired login during saving loses the take.** Any rejected login sends the user to the login page, including while a recording is being saved. Logins last 7 days, so this is rare.
 - **Should-haves included:** bubble position, cancel a take, permission help messages, and remembered settings were all cheap and are built.
+
+
+## Refinement batch 1
+
+Three features added after the first build was tested by hand.
+
+- **Camera-only recording is now in.** This reverses the earlier "Two recording modes instead of three" cut. The saved video is the camera filling the frame. A recording's mode can now be one of three values, which is the only change to the server.
+- **Mirror camera.** A switch flips the camera left to right in both the preview and the saved video, so the two always match. The tradeoff is that text held up to the camera reads backwards for viewers. A custom background image is never flipped.
+- **Show, dim, or hide the camera view.** This changes only what the person recording sees on the recorder page. The saved video always shows the camera normally, because a hidden camera in a camera-only video would be an empty video.
+- **The dim level is fixed.** It was not specified whether the darkness should be adjustable, so there is one level. An adjustable level is an easy follow-up.
+- **Camera view size in camera-only mode has three steps** (small, medium, large) and changes only the view on the page, never the saved video.
+
+### Frontend tradeoffs in refinement batch 1
+
+- **Camera-only video is recorded at the camera's own size, 640 by 480.** The camera is opened at that size so background effects stay fast, and camera-only reuses the same camera. A sharper camera-only picture is a follow-up that would need the effects re-tested at the larger size.
+- **Camera-only records the camera directly when it can.** With "Mirror camera" off and the background set to "None", the camera is recorded as it is. With either one on, the recording is taken from the same picture the live view shows, so the two cannot differ.
+- **With "Blur", the blurred room is flipped along with the person** when "Mirror camera" is on, because it is the real room behind them. Only a custom image stays the right way round.
+- **"Camera view" and "Camera view size" are remembered as soon as they are changed**, because they can be changed during a recording. The other settings are still remembered when a recording starts.
+- **"Camera view" and "Camera view size" sit under the camera view**, not in the setup panel, so they are in the same place before and during a recording.
+- **If the camera is unplugged during a camera-only recording, the recording stops and is saved**, the same way "Stop sharing" ends a screen recording.
