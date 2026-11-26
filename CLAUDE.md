@@ -55,7 +55,7 @@ Testing is Playwright (via Playwright MCP) for web apps, HTTP integration tests 
 
 URL → scoping conversation → spec set (PRD, decisions, stories, contract) → parallel build (backend + frontend) → QA with browser-driven tests → working product.
 
-That line is the first run, which produces the baseline. Changes after it go through `/sprint-zero-refine`: requests in plain words → one issue per request → the user's approval → spec edits where behaviour changes → the engineers whose side is touched → QA against a temporary copy → batch summary. See "Refinement" below.
+That line is the first run, which produces the baseline. Changes after it go through `/sprint-zero-refine`: requests in plain words → one issue per request → the user's approval → spec edits where behaviour changes → the engineers whose area is touched → QA against a temporary copy → batch summary. See "Refinement" below.
 
 ---
 
@@ -155,15 +155,18 @@ A build is one generated product, its spec set and its code together in one fold
 
 The command works on the build at the repo root unless the first argument names a build folder, such as `examples/loom-clone`. A folder is a build only when it holds `docs/scope.md`; anything else is refused and nothing is written. One invocation is one batch.
 
-1. **Find the build and check git.** If the build folder has uncommitted changes, the command recommends a commit and waits for the user's choice. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
-2. **Check in.** It lists issues from earlier batches that are still `built` and offers to mark them `confirmed`. This does not hold up the new batch.
-3. **Split the requests.** Each request becomes one refinement, with an area (`server`, `client`, or `both`) and a track. Anything ambiguous is asked about once, in a single message.
-4. **Write the issues.** One file per refinement in `docs/issues/`, numbered continuously across batches. Each has a header (status, batch, track, area) and four sections: Request (the user's words, unchanged), Behaviour (checkable statements with the exact on-screen labels), Spec changes, and Results.
-5. **Wait for approval.** A table of the proposed issues is printed and nothing in the spec set or the code changes until the user approves. The user may edit the files, drop individual issues, or move an issue to the other track; the files are read again from disk before anything is built. `--no-confirm`, or the same in plain words, skips the wait but not the table.
-6. **Edit the spec set** for spec-first issues, in place, before any code is written.
-7. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
-8. **Verify.** `qa-engineer` runs once per batch.
-9. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
+Two checks happen before step 1. The command finds the build, and it checks git. If the build folder has uncommitted changes, it recommends a commit and waits for the user's choice. If git ignores parts of the build, it says that a commit is not a restore point for those parts. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
+
+The eight steps that follow have the same numbers and names as in the command file.
+
+1. **Check in.** It lists issues from earlier batches that are still `built` and offers to mark them `confirmed`. This does not hold up the new batch.
+2. **Split the requests.** Each request becomes one refinement, with an area (`server`, `client`, or `both`) and a track. Anything ambiguous is asked about once, in a single message.
+3. **Write the issues.** One file per refinement in `docs/issues/`, numbered continuously across batches. Each has a header (status, batch, track, area) and four sections: Request (the user's words, unchanged), Behaviour (checkable statements with the exact on-screen labels), Spec changes, and Results.
+4. **Wait for approval.** A table of the proposed issues is printed, and no code and no spec file other than issue files and the build notes changes until the user approves. The user may edit the files, drop individual issues, or move an issue to the other track; the files are read again from disk before anything is built. `--no-confirm`, or the same in plain words, skips the wait but not the table.
+5. **Edit the spec set** for spec-first issues, in place, before any code is written.
+6. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
+7. **Verify.** `qa-engineer` runs once per batch.
+8. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
 
 The main session is still the only orchestrator. It writes the issue files and edits the spec set itself, but it never edits build code, however small the change. `tech-lead` is not invoked in a refinement, and the four spec-writer commands are not used, because each rewrites its file from scratch.
 
@@ -211,13 +214,17 @@ Once a baseline exists, the build's database holds the user's own data, not test
 
 ### Build notes
 
-`docs/build-notes.md` carries what one batch learned to the next. It has two sections. House rules are standing instructions from the user about how the build may be worked on, for example "do not drive a browser"; the orchestrator writes them only after the user has agreed the wording, and they override the agents' defaults and the command's own steps. Constraints are facts about how the build works that no spec file holds; engineers append them when they finish, and this is the only file in `docs/` an engineer writes to during a refinement. Every engineer and QA brief says to read the build notes first.
+`docs/build-notes.md` carries what one batch learned to the next. It has two sections, and every engineer and QA brief says to read the file first.
+
+House rules are standing instructions from the user about how the build may be worked on, for example "do not drive a browser"; the orchestrator writes them only after the user has agreed the wording, and they override the agents' defaults and the command's own steps.
+
+Constraints are facts about how the build works that no spec file holds; engineers append them when they finish, and this is the only file in `docs/` an engineer writes to during a refinement.
 
 ### What the command declines, and the guard
 
 A request to change the build configuration (project type, stack profile, or data layer) is declined: it needs a new baseline. A request to raise the scope level is declined: it is not supported yet. Neither gets an issue, and the other requests in the same prompt go ahead.
 
-`/sprint-zero` has a matching guard. Run without `--fresh` or `--rebuild` on a folder that already holds a finished baseline, it prints a pointer to `/sprint-zero-refine` and stops. A run that was interrupted before finishing still resumes as before.
+`/sprint-zero` has a matching guard. Run without `--fresh` or `--rebuild` on a folder that already holds a finished baseline, it prints a pointer to `/sprint-zero-refine` and stops. A run that was interrupted before finishing still resumes as before. When the spec set and the code are complete but no status file says how the run ended, it asks the user which of the two it is.
 
 ### Worker agents in refinement mode
 
@@ -288,7 +295,7 @@ Sprint Zero uses a two-tier pattern that respects Claude Code's sub-agent limita
 
 When running a build, invoke tech-lead first for the brief, then follow the recommended execution order it returns.
 
-A refinement batch keeps the same two tiers but skips tech-lead: the approved issues are the brief, and the main session spawns only the engineers whose side is touched, then qa-engineer. See "Refinement" above.
+A refinement batch keeps the same two tiers but skips tech-lead: the approved issues are the brief, and the main session spawns only the engineers whose area is touched, then qa-engineer. See "Refinement" above.
 
 ---
 

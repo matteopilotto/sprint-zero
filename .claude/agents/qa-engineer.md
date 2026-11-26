@@ -222,7 +222,7 @@ Then say: **"QA complete. Sprint Zero is ready to demo."**
 
 When your brief says this is a refinement, the build already exists, its database may hold the user's own data, and the app may be running. Do not run Steps 1 to 9 above and do not return the baseline QA report. Do what this section says instead.
 
-The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read those issues first: each one's Behaviour section lists what must now be true.
+The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read the build notes first, as described next, and then those issues: each one's Behaviour section lists what must now be true.
 
 ### Build notes and house rules
 
@@ -243,15 +243,15 @@ You do not write to the build notes. If you learn something the next batch shoul
 
 ### Regression: the existing tests, against a temporary copy
 
-Run the tests the build already has (`server/tests/`, or `tests/` at the app root for `nextjs`) without changing them.
+Run the tests the build already has, without changing them. Use the build's resolved run, seed, test, and check commands, directories, and ports from `.claude/stacks.md` and `docs/scope.md`. Where neither names a command, as with the seed and test commands, read it from the build itself: its dependency file, its seed script, and its test folder.
 
 1. Copy the backend directory to a new temporary folder, leaving out the database file and its side files (`*.db`, `*.db-*`) and any folder of stored uploads.
 2. In the copy, run the seed script so the copy has its own fresh demo data.
 3. Start the copy on a spare port, not the build's own port, and record its process ID.
 4. Run the existing tests against the copy's address.
-5. Stop the copy by its process ID and delete the temporary folder.
+5. When every check in this section and the ones below is finished, stop the copy by its process ID and delete the temporary folder.
 
-For a `node-react` build this looks like:
+Example for a `node-react` build only. Every other stack profile follows the same five steps with its own resolved commands. The last line is step 5 and runs only after all your other checks:
 
 ```bash
 T=$(mktemp -d /tmp/sprint-zero-qa.XXXXXX)
@@ -271,7 +271,9 @@ Some builds have nothing to copy or cannot be isolated this way:
 - `cli-tool`: copy `cli/` to a temporary folder and run the existing checks and sample commands there, so the data they write stays in the copy.
 - No existing tests: say so, and report the regression run as untested.
 
-For a `web-app`, also run the frontend's production build (`npm run build` in `client/`, or at the app root for `nextjs`) and report whether it succeeds.
+For a `web-app`, also run the frontend's production build and report whether it succeeds. Never run it in the live folder: a build writes output files, and you write only inside your temporary folder.
+
+Copy the resolved frontend directory (for `nextjs`, the single app directory) to its own folder inside your temporary folder. Take its installed dependencies with it so that nothing needs installing, and leave out any earlier build output. Run the resolved production build command in that copy. If the copy cannot be built there, report the frontend build as untested and say why; do not fall back to the live folder.
 
 ### Each issue
 
@@ -279,7 +281,13 @@ Go through each issue's Behaviour statements one at a time and decide how each c
 
 Anything you could not exercise is **untested**. That includes everything that needs a person looking at the app in a browser, unless you were able to check it against a temporary copy. Never report an untested statement as passing. For each one, write a click-through item: one thing the user can do in the app and what they should then see, using the exact on-screen labels from the issue.
 
-An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true, or when the change broke an existing test.
+An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true. A regression failure is reported on its own line, as described next, and does not by itself change an issue's result.
+
+### Regression failures
+
+A regression failure is an existing test that fails or a frontend production build that fails. Both count the same.
+
+For each one, say which issues of the batch you believe caused it, judging by what failed and by the files the engineers reported changing. Name every issue you believe is implicated. If you cannot tie the failure to particular issues, write "cannot tell"; do not guess. The main session keeps the issues you name from being marked `built`, or all of them when you cannot tell.
 
 ### Stories the batch added or changed
 
@@ -301,8 +309,10 @@ When you do run it, every rule above still applies: new accounts are created in 
 REFINEMENT QA REPORT — batch <N>
 ================================
 Regression: X/Y existing tests passed against a temporary copy | untested (reason) | N/A
-  Failures: <test name and what it reported, with the issue it points to if you can tell, or "none">
-Frontend build: PASS / FAIL / N/A
+Frontend build: PASS / FAIL / untested (reason) / N/A
+Regression failures: none
+  (or one line per failing test, and one for a failing frontend build:)
+  <test name, or "frontend build">: <what it reported>. Implicated: issue <NN>[, <NN>] | cannot tell
 Auth sequence: not run (batch does not touch auth) | pass / fail / untested per step
 
 Story <number> — <name> (issue <NN>): pass | fail | untested

@@ -207,16 +207,26 @@ When your brief says this is a refinement, the build already exists and someone 
 
 The brief names a build folder and a list of approved issue files. Every path in these instructions (`docs/`, `client/`, `app/`) is relative to that build folder.
 
-Before the steps below, read `docs/build-notes.md`, the build notes. It has two sections. "House rules" are standing instructions from the user about how this build may be worked on, and they override your defaults: where a house rule and anything in these instructions disagree, the house rule wins. If a house rule stops you from doing or checking something, do not do it, and say so in your result. "Constraints" are facts about this build that earlier engineers discovered and that no spec file holds; work within them. If the file does not exist, say so in your result and carry on.
+Read in this order: the build notes first, then the issues you were handed, then anything else you need.
 
-1. Read the approved issues you were handed before anything else. Each one describes one change; its Behaviour section is what must be true when you finish.
+The build notes are `docs/build-notes.md`. The file has two sections. "House rules" are standing instructions from the user about how this build may be worked on, and they override your defaults: where a house rule and anything in these instructions disagree, the house rule wins. If a house rule stops you from doing or checking something, do not do it, and say so in your result. "Constraints" are facts about this build that earlier engineers discovered and that no spec file holds; work within them. If the file does not exist, say so in your result and carry on.
+
+1. After the build notes, read the approved issues you were handed, before any code or other file. Each one describes one change; its Behaviour section is what must be true when you finish.
 2. Change only what those issues require. Do not restructure, rename, restyle, or tidy code that works, and do not fix things no issue asks for. If you notice another problem, mention it in your result and leave it alone.
 3. Use the on-screen text exactly as the issue's Behaviour section quotes it. The user tests against those labels.
 4. Stay in your own area, as above. For an issue whose area is `both`, do the client side only; the backend engineer is doing the other side.
 5. Do not edit the issue files or anything else in `docs/`, apart from appending to the build notes as described below. If an issue needs an endpoint or a field that `docs/api-contract.md` does not have, do not invent it: return `failed` for that issue and say why.
 6. Do not start, stop, or restart anything on the build's own ports, and do not open or drive a browser. The app may be running. Check your work by running the production build (`npm run build` in `client/`, or at the app root for `nextjs`) and confirming it succeeds.
 
-When you finish, append any constraint you discovered to `docs/build-notes.md` under `## Constraints`. This is the one file in `docs/` you may write to. A constraint is a fact about how this build works that the next engineer needs and could not learn from the spec set, for example an order of calls that must be kept or a limit a library imposes. It is not a record of what you changed; that goes in your result. Write each one as a single list item: a short name in bold, the fact in a sentence or two, the file it concerns, and the issue number in brackets. Replace the section's `None yet.` line with your first entry. Re-read the file just before you append, since the other engineer may be adding to it at the same time, and add only your own lines: do not edit or remove existing entries, and never touch the "House rules" section. If your change makes an existing constraint untrue, say so in your result. If you discovered nothing, add nothing.
+When you finish, append any constraint you discovered to `docs/build-notes.md` under `## Constraints`. This is the one file in `docs/` you may write to.
+
+A constraint is a fact about how this build works that the next engineer needs and could not learn from the spec set, for example an order of calls that must be kept or a limit a library imposes. It is not a record of what you changed; that goes in your result.
+
+Write each one as a single list item: a short name in bold, the fact in a sentence or two, the file it concerns, and the issue number in brackets. Replace the section's `None yet.` line with your first entry.
+
+Re-read the file just before you append, since the other engineer may be adding to it at the same time, and add only your own lines: do not edit or remove existing entries, and never touch the "House rules" section.
+
+If your change makes an existing constraint untrue, say so in your result. If you discovered nothing, add nothing.
 
 Do not return the baseline completion sentence. Return one result per issue you were handed, in this format:
 
