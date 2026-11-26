@@ -47,6 +47,7 @@ Before starting either server, check whether it is already running (`lsof -nP -i
 - **Nothing from outside localhost at runtime.** No CDN scripts, fonts, or models. The person-detection files are copied from `node_modules` into `client/public/mediapipe/` by `client/scripts/copy-mediapipe.mjs` on `predev` and `prebuild`.
 - **Dim, hide, and view size are page-only.** They are done with DOM and CSS over the displayed camera view and must never touch the canvas or stream that feeds the recording.
 - **The recorder tab is usually in the background while recording.** Anything drawn into the recording must be driven by the worker ticker (`client/src/recorder/tickWorker.js`), not `requestAnimationFrame`, and times must come from timestamps, not tick counts.
+- **The floating controls window needs a click.** `documentPictureInPicture.requestWindow()` only works straight from a user click and uses that click up, so in `RecordPage.handleStart` it is called after `getDisplayMedia()` has been called and before anything is awaited. Keep that order.
 - **Use the exact labels in `docs/user-stories.md`.** The user tests against them.
 
 ## Verifying without a browser
@@ -78,4 +79,6 @@ Everything about capture, the camera, segmentation, playback, and download can o
 
 ## Current state
 
-Refinement batch 1 (camera-only mode, mirror camera, show/dim/hide camera view) is built and committed but has not been confirmed in a browser. The click-through for it is in the three issue files under `.scratch/loom-clone/issues/`. Update this section when that changes.
+Refinement batch 1 (camera-only mode, mirror camera, show/dim/hide camera view): mirror, camera-only, and hide are confirmed in a browser by the user. "Dim" has not been explicitly confirmed (issue 03).
+
+Refinement batch 2 (issues 04 to 08) is built and committed: the "still recording" text fix, the countdown fix (recording starts 250 ms after the countdown leaves the screen, phase `starting`), "Computer audio", and "Floating controls" (Document Picture-in-Picture, `client/src/recorder/useFloatingWindow.js`). The click-through for each is in its issue file. The user reported the floating window appearing in a recording, so it now closes automatically when the entire screen is shared (`wholeScreen` in `useRecorder.js`); that fix is also unconfirmed. Whole-screen recordings are controlled with "Media key shortcuts" (issue 08, `client/src/recorder/mediaKeys.js`: a silent looping sound holds the browser's media session so Play/Pause and Next track reach the page). The user confirmed media keys work in Brave (2026-11-26). The other batch 2 items (issues 04 to 07) have not been explicitly confirmed. Update this section when that changes.
