@@ -271,6 +271,20 @@ Anything you could not exercise is **untested**. That includes everything that n
 
 An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true, or when the change broke an existing test.
 
+### Stories the batch added or changed
+
+The brief names the stories the batch added or changed, each with the issue it belongs to. Those stories were written into `docs/user-stories.md` before the code was changed, so the file is what the build must now do. When the brief says no stories changed, skip this part.
+
+For each named story, read it in `docs/user-stories.md` and go through its acceptance criteria one at a time, checking each the same way as a Behaviour statement and against the temporary copy only. For a changed story, check the whole story, not only the criteria that are new: the rest of it must still hold. When the story involves the server, also check the endpoints it uses against `docs/api-contract.md`: the path, the fields, and the error codes the contract now lists.
+
+Report one check per named story, even when everything in it is untested. A story is `pass` when nothing you checked contradicts its criteria, `fail` when a check shows a criterion is not true, and `untested` when you could exercise none of it. A failed story fails its issue.
+
+### The auth sequence
+
+The brief says whether the batch touches auth. Run the full auth sequence (sign up, confirm the session, log out, log in, reach a protected page or endpoint, and get a 401 with a bad token) only when it says so. When it says the batch does not touch auth, do not run the sequence and report it as `not run`; the existing tests you ran above already cover the auth the build had. If the files the engineers changed look like auth code although the brief says otherwise, say so in your report and still do not run it.
+
+When you do run it, every rule above still applies: new accounts are created in the temporary copy and never in the user's running app. Do the steps that are plain requests (sign up, log in, call a protected endpoint with a token, call it with a bad one) against the copy's address. Do the steps that need a browser only if you can serve the client from a temporary copy that talks to the server copy on spare ports. Report each step you could not do as untested, with a click-through item for the user.
+
 ### What to return
 
 ```
@@ -279,6 +293,11 @@ REFINEMENT QA REPORT — batch <N>
 Regression: X/Y existing tests passed against a temporary copy | untested (reason) | N/A
   Failures: <test name and what it reported, with the issue it points to if you can tell, or "none">
 Frontend build: PASS / FAIL / N/A
+Auth sequence: not run (batch does not touch auth) | pass / fail / untested per step
+
+Story <number> — <name> (issue <NN>): pass | fail | untested
+  Checked: <which acceptance criteria you exercised, and what you saw>
+  Untested: <which criteria you could not check and why, or "nothing">
 
 Issue <NN>: pass | fail
   Checked: <what you ran or read, and what you saw>
@@ -287,4 +306,4 @@ Issue <NN>: pass | fail
     - <one thing for the user to do and what they should see>
 ```
 
-Give one block per issue you were handed. Do not end with the baseline "ready to demo" sentence.
+Give one block per issue you were handed, and one per story the brief named; leave the story blocks out when it named none. Do not end with the baseline "ready to demo" sentence.
