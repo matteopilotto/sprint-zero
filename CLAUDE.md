@@ -155,15 +155,18 @@ A build is one generated product, its spec set and its code together in one fold
 
 The command works on the build at the repo root unless the first argument names a build folder, such as `examples/loom-clone`. A folder is a build only when it holds `docs/scope.md`; anything else is refused and nothing is written. One invocation is one batch.
 
-1. **Find the build and check git.** If the build folder has uncommitted changes, the command recommends a commit and waits for the user's choice. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
-2. **Check in.** It lists issues from earlier batches that are still `built` and offers to mark them `confirmed`. This does not hold up the new batch.
-3. **Split the requests.** Each request becomes one refinement, with an area (`server`, `client`, or `both`) and a track. Anything ambiguous is asked about once, in a single message.
-4. **Write the issues.** One file per refinement in `docs/issues/`, numbered continuously across batches. Each has a header (status, batch, track, area) and four sections: Request (the user's words, unchanged), Behaviour (checkable statements with the exact on-screen labels), Spec changes, and Results.
-5. **Wait for approval.** A table of the proposed issues is printed and nothing in the spec set or the code changes until the user approves. The user may edit the files, drop individual issues, or move an issue to the other track; the files are read again from disk before anything is built. `--no-confirm`, or the same in plain words, skips the wait but not the table.
-6. **Edit the spec set** for spec-first issues, in place, before any code is written.
-7. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
-8. **Verify.** `qa-engineer` runs once per batch.
-9. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
+Two checks happen before step 1. The command finds the build, and it checks git. If the build folder has uncommitted changes, it recommends a commit and waits for the user's choice. If git ignores parts of the build, it says that a commit is not a restore point for those parts. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
+
+The eight steps that follow have the same numbers and names as in the command file.
+
+1. **Check in.** It lists issues from earlier batches that are still `built` and offers to mark them `confirmed`. This does not hold up the new batch.
+2. **Split the requests.** Each request becomes one refinement, with an area (`server`, `client`, or `both`) and a track. Anything ambiguous is asked about once, in a single message.
+3. **Write the issues.** One file per refinement in `docs/issues/`, numbered continuously across batches. Each has a header (status, batch, track, area) and four sections: Request (the user's words, unchanged), Behaviour (checkable statements with the exact on-screen labels), Spec changes, and Results.
+4. **Wait for approval.** A table of the proposed issues is printed, and no code and no spec file other than issue files and the build notes changes until the user approves. The user may edit the files, drop individual issues, or move an issue to the other track; the files are read again from disk before anything is built. `--no-confirm`, or the same in plain words, skips the wait but not the table.
+5. **Edit the spec set** for spec-first issues, in place, before any code is written.
+6. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
+7. **Verify.** `qa-engineer` runs once per batch.
+8. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
 
 The main session is still the only orchestrator. It writes the issue files and edits the spec set itself, but it never edits build code, however small the change. `tech-lead` is not invoked in a refinement, and the four spec-writer commands are not used, because each rewrites its file from scratch.
 
