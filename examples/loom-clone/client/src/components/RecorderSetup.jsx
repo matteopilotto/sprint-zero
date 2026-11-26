@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import RadioGroup from './RadioGroup.jsx'
 
 const MODES = [
   { value: 'screen', label: 'Screen only' },
@@ -15,28 +16,6 @@ const POSITIONS = [
   { value: 'top-left', label: 'Top left' },
   { value: 'top-right', label: 'Top right' },
 ]
-
-function RadioGroup({ legend, name, options, value, onChange }) {
-  return (
-    <fieldset>
-      <legend>{legend}</legend>
-      <div className="choices">
-        {options.map((option) => (
-          <label key={option.value} className="choice">
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={value === option.value}
-              onChange={() => onChange(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  )
-}
 
 // The controls shown before recording starts.
 export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, onStart }) {
