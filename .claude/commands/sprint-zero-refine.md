@@ -60,7 +60,7 @@ Every issue file has a title, a four-line header, and four sections, in this ord
 
 Status: proposed
 Batch: <batch number>
-Track: straight to code
+Track: <straight to code | spec first>
 Area: <server | client | both>
 
 ## Request
@@ -74,7 +74,7 @@ Area: <server | client | both>
 
 ## Spec changes
 
-None.
+<"None." on the straight-to-code track; the list described below on the spec-first track>
 
 ## Results
 
@@ -85,13 +85,23 @@ Not built yet.
 
 **Behaviour** says what will be true once the refinement is built, as a short list of statements a person or a test can check. Write on-screen text exactly as it appears in the app, in quotes: take labels from `<build>/docs/user-stories.md` and from the client code, not from memory. Say where to look and what to see ("With "Hide" selected, the round view reads "Camera hidden" on one line"), not how the code should change.
 
-**Spec changes** lists the spec files the refinement will change. On the straight-to-code track it is always `None.`
+**Spec changes** lists what the refinement will change in the spec set, so the user can see its reach before agreeing. On the straight-to-code track it is always `None.` On the spec-first track it has one line per spec file, worked out in step 2d:
+
+```markdown
+## Spec changes
+
+- User stories: <each story to add or change, by number and name, with a few words on what changes>
+- API contract: <each endpoint, entity field, or error code to add or change, or "none (client only)">
+- Decisions: <each tradeoff to record, in one line, or "none">
+```
+
+Add a line for `scope.md` or `prd.md` only when the refinement would contradict that file, and quote the sentence that would become false.
 
 **Results** stays `Not built yet.` until step 8 fills it in.
 
 **Area** says which side of the build the refinement touches. `server` is the part `backend-engineer` owns: the API, the data code, or the whole program for a `cli-tool`. `client` is the part `frontend-engineer` owns: the screens. `both` means each side needs a change.
 
-**Track** is `straight to code` or `spec first`.
+**Track** is `straight to code` or `spec first`. Step 2d says how to choose. Every issue names its track, and the user may change it before approving.
 
 ### Statuses
 
@@ -310,9 +320,27 @@ For each refinement, read as much of the build as you need to decide whether the
 
 ### 2d. Choose the track
 
-Every refinement in this version of the command takes the straight-to-code track, which is meant for bug fixes and polish items: changes after which the user stories and the API contract are still true as written.
+Sort every refinement into one of the two tracks. Read `<build>/docs/user-stories.md` and, when the server is involved, `<build>/docs/api-contract.md` before you decide.
 
-If a request would change how a feature behaves or add a feature, do not build it on this track. Leave it out of the batch, write no issue file for it, and tell the user in one line that it needs the spec-first track, which this command does not support yet. Carry on with the other requests.
+- **Straight to code** is for a bug fix or a polish item. A bug fix makes the build do what the user stories and the contract already say. A polish item changes how something looks or reads without changing what it does. After either, the spec set is still true as written.
+- **Spec first** is for a changed behaviour or a new feature. The build will do something the user stories do not describe, or stop doing something they do describe, or the API will accept or return something the contract does not list.
+
+The test is one question: once this refinement is built, will the user stories and the contract still describe the product correctly, with nothing missing? If yes, the track is straight to code. If no, it is spec first. A request the user calls a "fix" is still spec first when a story's acceptance criteria would have to change to match it, and that includes a change to an on-screen label that a story quotes.
+
+When you cannot tell, choose spec first. An extra line in the user stories costs little; a spec set that no longer matches the product misleads every later batch.
+
+For each refinement, keep a one-line reason for the choice, in plain words that point at the spec set: "bug: story 14 already says Enter saves the title", "polish: wording only, no story quotes it", "new feature: no story covers it", "changed behaviour: story 21 says the opposite". The reason goes in the table in step 4a.
+
+**Then work out the spec changes** for each spec-first refinement. Skip this for straight-to-code refinements: their Spec changes section is `None.` and they change no spec file at any point in the run. For a request that step 2e has to ask about, do it once the answer is in.
+
+Read the spec set and work out what will have to change. Read only; nothing is edited until step 5.
+
+- **User stories.** Which stories change, and which are new. Name a changed story by its number and name as the file has them. Give a new story the next number after the highest in the file, and a name in the file's style. Every spec-first issue changes or adds at least one story.
+- **API contract.** Which endpoints, entity fields, or error codes are added or changed. The contract changes only when the server is involved, so only an issue with `Area: server` or `Area: both` can list a contract entry. A `client` issue writes "none (client only)". If a `client` issue turns out to need something the contract does not offer, its area is wrong: make it `both`. A server change that leaves what the API accepts and returns as it is changes no contract entry either; write "none".
+- **Decisions.** Any real tradeoff the refinement carries: an earlier decision it reverses, a limit it accepts, something asked for that is deliberately left out. Most refinements have none; write "none". A description of what is being built is not a tradeoff.
+- **Scope and PRD.** Leave both out unless the refinement would make a sentence in one of them false, for example a feature the PRD lists as out of scope. Then name the file and quote the sentence.
+
+These lists become the issue's Spec changes section in step 3.
 
 ### 2e. Ask about anything ambiguous
 
@@ -361,10 +389,13 @@ REFINEMENT BATCH <N> — PROPOSED
 ===============================
 Build: <build>
 
-| #  | Title                         | Track            | Area   | File                                          |
-| -- | ----------------------------- | ---------------- | ------ | --------------------------------------------- |
-| 04 | <title>                       | straight to code | client | <build>/docs/issues/04-<slug>.md              |
+| #  | Title                         | Track            | Why this track                              | Area   | File                                          |
+| -- | ----------------------------- | ---------------- | ------------------------------------------- | ------ | --------------------------------------------- |
+| 04 | <title>                       | straight to code | bug: story 14 already says this             | client | <build>/docs/issues/04-<slug>.md              |
+| 05 | <title>                       | spec first       | new feature: no story covers it             | both   | <build>/docs/issues/05-<slug>.md              |
 ```
+
+"Why this track" is the one-line reason from step 2d. Under the table, before the question, say in one or two plain sentences that spec-first issues update the spec set before any code is written and list what will change under "Spec changes", and that the user can move an issue to the other track by telling you or by changing its `Track:` line.
 
 > Nothing has been changed yet. Read the issues, edit the files if anything is off, and reply "approve" when you are happy for me to build them. To leave some out, say which, for example "approve all but 05".
 
@@ -389,9 +420,13 @@ One reply can approve some issues and reject others: "approve 04 and 06, drop 05
 
 If the user rejects every issue, mark them all `dropped` as 4c describes, say that nothing was built, and stop. If the user only wants to pause ("not now", "let me think"), stop here without building and leave the files as they are.
 
+The user may overrule a track. When they ask for an issue to move to the other track, change its `Track:` line and rewrite its Spec changes section to match: the list from step 2d when it moves to spec first, `None.` when it moves to straight to code. In the table, the reason for that issue becomes "your choice". If moving an issue to straight to code will leave a user story saying something the product no longer does, say so in one line, naming the story, and then do as the user asked.
+
 ### 4c. Re-read, then mark approved
 
 When the user approves, read every issue file of this batch again from disk before doing anything else. The user may have edited them, and the file as it now stands is what gets built: its Behaviour, its Area, and its title replace whatever you remember writing. A file whose status the user changed to `dropped` by hand is a rejected issue.
+
+The same goes for the track. The `Track:` line in the file decides what happens in step 5, whatever you proposed. If the user changed a `Track:` line to `straight to code`, set that issue's Spec changes to `None.` and change no spec file for it. If the user changed one to `spec first` and its Spec changes section is still `None.`, work the list out as in step 2d, write it into the file, show it to the user, and wait for their agreement on that issue before going on: a spec-first issue always lists its spec changes before it is approved. If the user edited the Spec changes list itself, the edited list is the one step 5 follows.
 
 For each issue the user rejected, change its status to `Status: dropped` and change nothing else in it. Never delete, rename, or renumber a dropped issue's file: it is the record of what the user decided against.
 
@@ -407,9 +442,62 @@ From here to the end of the run, only the `approved` issues are worked on. `drop
 
 ## Step 5 — Edit the spec set
 
-Nothing to do on the straight-to-code track: these issues change no spec file. Go to step 6.
+This step covers the approved issues whose header says `Track: spec first`. A straight-to-code issue changes no spec file, in this step or any other. If the batch has no spec-first issue, print "No spec changes in this batch." and go to step 6.
 
-<!-- A later ticket adds the spec-first edits here: user stories, API contract, decisions. -->
+You make these edits yourself, in place, before any engineer is spawned. The engineers and QA then read the updated files, so the spec set stays the shared truth. One approval covered both the spec edits and the code; do not ask again.
+
+Do not invoke `/user-story-writer`, `/api-contract-writer`, `/decisions-writer`, or `/prd-generator`. Each of them writes a whole file from scratch and would discard what is there.
+
+Three things hold for every edit in this step:
+
+- Read the whole file first and copy the format it already uses: its heading style, its field names, its numbering, the way it words acceptance criteria or endpoint entries. Do not introduce a new layout, and do not reword, reorder, or renumber anything the issues do not require.
+- Edit only what the issue's Spec changes section lists. If an edit turns out to need more or less than the list says, make the edit the Behaviour section calls for and correct the list in the issue file so it matches what changed.
+- If the file already says what the issue requires, because an earlier run got this far before stopping, leave it as it is.
+
+### 5a. User stories
+
+Edit `<build>/docs/user-stories.md` for every spec-first issue.
+
+For a new story, use the next number after the highest in the file; numbers are never reused. Place it at the end of the priority group it belongs to, with every field the file's other stories have, which is normally the story sentence, the acceptance criteria, priority, and effort. If earlier refinement stories in the file carry a note saying which batch added them, add the same note.
+
+For a changed story, keep its number and heading and edit only the acceptance criteria, or the story sentence, that the refinement makes untrue or incomplete.
+
+Acceptance criteria say the same thing as the issue's Behaviour section, with the same on-screen labels in quotes, written the way the file writes its criteria. Every Behaviour statement should be covered by a criterion in some story.
+
+If another part of the file would now be wrong, such as a line listing the new feature as not included, correct that line and nothing around it.
+
+Keep a list of the stories this step added or changed, by number and name, including any that an earlier run of the same issues already wrote. Step 7 hands it to QA.
+
+### 5b. API contract
+
+Edit `<build>/docs/api-contract.md` only for a spec-first issue whose area is `server` or `both` and whose Spec changes section lists a contract entry. A `client` issue never changes the contract.
+
+Add or change the listed endpoints, entity fields, and error codes in the format of the entries already in the file: the same parts in the same order, with request and response examples where the others have them. Use the file's existing error shape and conventions. If a changed field also appears in the entities section or in other endpoints' examples, bring those in line.
+
+The contract is edited here, before step 6, so that both engineers build to the same contract and no code is written against an entry that does not exist yet.
+
+### 5c. Decisions
+
+Gather the tradeoffs from the Spec changes sections of all spec-first issues in the batch. If there are none, do not touch `<build>/docs/decisions.md`: add no heading and no "nothing to record" line.
+
+If there is at least one, add a single section at the end of the file, headed `## Refinement batch <N>`, and put every tradeoff of the batch under it. One heading per batch, not one per issue. If the heading already exists for this batch, add to it.
+
+Under the heading, write one short sentence saying what the batch contains, then one entry per tradeoff in the style the file's other sections use. Each entry names the choice and its cost in plain words, and says so when it reverses an earlier decision, naming that decision. The issue files are the record of what was asked and built; this section holds only the choices someone might later ask "why?" about.
+
+### 5d. Scope and PRD
+
+Leave `<build>/docs/scope.md` and `<build>/docs/prd.md` untouched unless a spec-first issue's Spec changes section names one of them because the refinement would contradict it. Then change only the sentence or list item that would be false, in as few words as will make it true. Never change the scope level or the build configuration recorded in `scope.md`.
+
+### 5e. Say what changed
+
+Print one line per spec file, including the ones left alone:
+
+> Spec set updated for batch <N>.
+>
+> - User stories: <stories added or changed, by number and name>
+> - API contract: <entries added or changed | not changed>
+> - Decisions: <"Refinement batch <N>" added with <count> tradeoff(s) | not changed>
+> - Scope and PRD: <not changed | what changed>
 
 ---
 
@@ -439,6 +527,7 @@ The approved issues are the brief. Each engineer's prompt contains:
 - Any one-off instruction the user gave for this batch that affects the engineer's work, in the user's words.
 - The batch number and the paths of the approved issue files for its area, with the instruction to read them before changing anything.
 - The resolved build configuration and scope level.
+- For spec-first issues, that the spec set was already updated in step 5, with the story numbers and contract entries that changed, and the instruction to read those after the issues and build to them.
 - For an issue with `Area: both`, that the other engineer is working on the other side of the same issue at the same time.
 
 Do not paste the issue text into the prompt and do not describe a solution. The engineer reads the files.
@@ -486,9 +575,13 @@ The QA prompt contains:
 - The batch number and the paths of the issue files that are ready for QA.
 - The resolved build configuration, scope level, directories, run commands, and ports.
 - Which engineers ran and which files each reported changing.
+- The stories the batch added or changed, by number and name, from step 5a, each with the issue it belongs to, and the instruction to report one check per story. When the batch has no spec-first issue, say "No stories changed in this batch."
+- Whether the batch touches auth, in one line with the reason, and so whether the full auth sequence must be run. The paragraph below says how to decide.
 - That the existing tests must run against a temporary copy with a freshly seeded database, never against the build folder's own database, and that nothing already running may be stopped.
 
-QA returns one regression result for the batch and one result per issue: what it checked, what it could not check, and a click-through list for the user. Anything QA could not check is untested. Never report it as passing, and never fill a gap in QA's report from your own reading of the code.
+A batch touches auth when an approved issue changes signing up, logging in, logging out, how the session is kept, which pages or endpoints need a login, or how the server works out who a request comes from; or when an engineer reported changing a file that does any of those (the auth routes or middleware, the session context, the protected route wrapper, the login or signup page). When neither is true, tell QA the batch does not touch auth and that the full auth sequence must not be run. The existing tests still run in every batch, and they include whatever auth tests the build already has.
+
+QA returns one regression result for the batch, one check per story named in the brief, the auth sequence result when it was asked for, and one result per issue: what it checked, what it could not check, and a click-through list for the user. If the report has no check for a story you named, that story is untested; say so in the issue's Results. Anything QA could not check is untested. Never report it as passing, and never fill a gap in QA's report from your own reading of the code.
 
 ### If QA reports a failure
 
@@ -536,6 +629,8 @@ Batch <N>, <today's date>.
 ```
 
 For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list. Start that line with `**Failed:**`, and say that one retry was made and what it reported, so the user reads both attempts. If the issue itself was sound but the regression run failed, say that instead and name the failing tests.
+
+For a spec-first issue, the "Checked by QA" line also names each story the issue added or changed and QA's result for it (`pass`, `fail`, or `untested`). An issue with a story check that failed is not `built`.
 
 ### 8c. Print the batch summary
 
