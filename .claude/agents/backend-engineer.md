@@ -125,6 +125,13 @@ The brief names a build folder and a list of approved issue files. Every path in
 3. Stay in your own area, as above. For an issue whose area is `both`, do the server side only; the frontend engineer is doing the other side.
 4. Do not edit the issue files or anything else in `docs/`. If an issue cannot be built without changing `docs/api-contract.md`, do not work around it: return `failed` for that issue and say why.
 5. Do not run the seed script in the build folder, and do not start, stop, or restart anything on the build's own port. The database there may hold the user's own data, and the app may be running. Check your work by reading it and by loading the changed files (for example `node --check <file>`); QA runs the tests against a temporary copy afterwards.
+6. Schema changes are additive, and the backend applies them itself when it starts. The user's records must still be there after the change, and nobody will run the seed script or a migration by hand against this build.
+   - You may add a table or add a column. A new column must be nullable or have a default, so existing rows stay valid.
+   - You may not drop, rename, or change the type of a table or column, delete or rewrite existing rows, or delete or recreate the database file. If an issue cannot be built without one of these, return `failed` for it and say why.
+   - `local`: put the change in the code that already creates the tables on server start. Use `CREATE TABLE IF NOT EXISTS` for a new table. For a new column, check whether it exists (`PRAGMA table_info(<table>)`) and run `ALTER TABLE <table> ADD COLUMN ...` only if it is missing, so that starting the server twice is safe.
+   - `supabase`: add a new numbered file in `server/migrations/` that uses `IF NOT EXISTS` throughout, leave the earlier files as they are, and make sure the server runs `migrate()` when it starts.
+   - Keep the seed script in step with the new schema so that a fresh copy still seeds, but do not run it here.
+   - Name every schema change in your result notes.
 
 Do not return the baseline completion sentence. Return one result per issue you were handed, in this format:
 
