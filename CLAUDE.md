@@ -55,6 +55,8 @@ Testing is Playwright (via Playwright MCP) for web apps, HTTP integration tests 
 
 URL → scoping conversation → spec set (PRD, decisions, stories, contract) → parallel build (backend + frontend) → QA with browser-driven tests → working product.
 
+That line is the first run, which produces the baseline. Changes after it go through `/sprint-zero-refine`: requests in plain words → one issue per request → the user's approval → spec edits where behaviour changes → the engineers whose side is touched → QA against a temporary copy → batch summary. See "Refinement" below.
+
 ---
 
 ## Repo structure
@@ -86,6 +88,8 @@ Files generated at runtime (per user run):
 - `docs/api-contract.md` — the contract all agents build to
 - `server/` / `client/` (node-react, python-react) or one `app/` (nextjs) or `cli/` (cli-tool) — the build, per the resolved stack profile
 - `*.db` — the SQLite file for the `local` data layer (gitignored)
+- `docs/issues/NN-<slug>.md` — one issue file per refinement, written by `/sprint-zero-refine` and kept with the spec set
+- `docs/build-notes.md` — the build notes: the user's house rules and the constraints engineers discovered, created on the build's first refinement
 - `.claude/settings.local.json` — demo-time permissive settings, gitignored
 
 ---
@@ -139,6 +143,88 @@ Which engineers run depends on the project type — `frontend-engineer` is spawn
 
 ---
 
+## Refinement
+
+A finished `/sprint-zero` run leaves a baseline: the build as first produced. Every change after that is a refinement, made with `/sprint-zero-refine [build folder] <requests in plain words> [--no-confirm] [--no-launch]`. The full instructions are in `.claude/commands/sprint-zero-refine.md`; this section is the summary every session should hold.
+
+### Vocabulary
+
+A build is one generated product, its spec set and its code together in one folder. A refinement is one requested change to a build that has a baseline: a bug fix, a polish item, a changed behaviour, or a new feature. A batch is the group of refinements requested in one invocation, built and verified together. An issue is the file that describes exactly one refinement. Use these words as given; do not swap in "ticket", "round", or "tweak".
+
+### The workflow
+
+The command works on the build at the repo root unless the first argument names a build folder, such as `examples/loom-clone`. A folder is a build only when it holds `docs/scope.md`; anything else is refused and nothing is written. One invocation is one batch.
+
+1. **Find the build and check git.** If the build folder has uncommitted changes, the command recommends a commit and waits for the user's choice. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
+2. **Check in.** It lists issues from earlier batches that are still `built` and offers to mark them `confirmed`. This does not hold up the new batch.
+3. **Split the requests.** Each request becomes one refinement, with an area (`server`, `client`, or `both`) and a track. Anything ambiguous is asked about once, in a single message.
+4. **Write the issues.** One file per refinement in `docs/issues/`, numbered continuously across batches. Each has a header (status, batch, track, area) and four sections: Request (the user's words, unchanged), Behaviour (checkable statements with the exact on-screen labels), Spec changes, and Results.
+5. **Wait for approval.** A table of the proposed issues is printed and nothing in the spec set or the code changes until the user approves. The user may edit the files, drop individual issues, or move an issue to the other track; the files are read again from disk before anything is built. `--no-confirm`, or the same in plain words, skips the wait but not the table.
+6. **Edit the spec set** for spec-first issues, in place, before any code is written.
+7. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
+8. **Verify.** `qa-engineer` runs once per batch.
+9. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
+
+The main session is still the only orchestrator. It writes the issue files and edits the spec set itself, but it never edits build code, however small the change. `tech-lead` is not invoked in a refinement, and the four spec-writer commands are not used, because each rewrites its file from scratch.
+
+Running the command with no request resumes issues left at `approved` by a batch that could not finish. An engineer or QA failure gets one automatic retry. If it fails again the run ends in the named state `REFINE_NEEDED`: issues that passed are still `built`, and the ones that failed stay `approved` with the failure written in their Results.
+
+### The two tracks
+
+The track is the route a refinement takes to the code. The orchestrator chooses it, gives a one-line reason, and the user may overrule.
+
+| Track              | For                                  | What happens                                                                          |
+| ------------------ | ------------------------------------ | ------------------------------------------------------------------------------------- |
+| `straight to code` | A bug fix or a polish item           | No spec file changes. The spec set is still true as written once the change is built. |
+| `spec first`       | A changed behaviour or a new feature | The spec set is edited before any code is written, so the contract stays the shared truth. |
+
+On the spec-first track the user stories always change, the API contract changes only when the server is involved, and the decisions file gains an entry only for a real tradeoff, under one `## Refinement batch <N>` heading per batch.
+
+The test is whether the user stories and the contract will still describe the product correctly once the refinement is built. When in doubt the track is spec first. `scope.md` and `prd.md` are left alone unless a refinement would make one of their sentences false, and the scope level and build configuration recorded in `scope.md` never change.
+
+### Status lifecycle
+
+Every issue has exactly one status, on the `Status:` line of its header.
+
+| Status       | Meaning                                                                 |
+| ------------ | ----------------------------------------------------------------------- |
+| `needs-info` | The request is ambiguous and a question is waiting on the user          |
+| `proposed`   | Written and waiting for the user's approval                             |
+| `approved`   | The user agreed; work may start                                         |
+| `built`      | The code is in and automated checks pass, but the user has not tried it |
+| `confirmed`  | The user has tried it and accepted it                                   |
+| `dropped`    | The user decided against it                                             |
+
+Built and confirmed are different on purpose. Only the user's own statement that they tried a change makes an issue `confirmed`; a QA pass never does. Only the user drops an issue, and a dropped issue's file is kept as the record of what was decided against.
+
+These statuses belong to generated builds. They are unrelated to the triage labels under "Agent skills" below, which are for work on the kit itself and live in `.scratch/`.
+
+### Data rules
+
+Once a baseline exists, the build's database holds the user's own data, not test data.
+
+- The seed script is never run in the build folder during a refinement, by the orchestrator or by any sub-agent.
+- Schema changes are additive (a new table, or a new column that is nullable or has a default) and the backend applies them itself when it starts, so existing records survive.
+- QA runs the build's existing tests against a temporary copy of the server with a freshly seeded database, on a spare port. It never tests against the build's own database or its running server.
+- Nothing already running is stopped without the user's agreement.
+- Anything QA could not check is reported as untested, with a click-through item for the user. It is never reported as passing.
+
+### Build notes
+
+`docs/build-notes.md` carries what one batch learned to the next. It has two sections. House rules are standing instructions from the user about how the build may be worked on, for example "do not drive a browser"; the orchestrator writes them only after the user has agreed the wording, and they override the agents' defaults and the command's own steps. Constraints are facts about how the build works that no spec file holds; engineers append them when they finish, and this is the only file in `docs/` an engineer writes to during a refinement. Every engineer and QA brief says to read the build notes first.
+
+### What the command declines, and the guard
+
+A request to change the build configuration (project type, stack profile, or data layer) is declined: it needs a new baseline. A request to raise the scope level is declined: it is not supported yet. Neither gets an issue, and the other requests in the same prompt go ahead.
+
+`/sprint-zero` has a matching guard. Run without `--fresh` or `--rebuild` on a folder that already holds a finished baseline, it prints a pointer to `/sprint-zero-refine` and stops. A run that was interrupted before finishing still resumes as before.
+
+### Worker agents in refinement mode
+
+`backend-engineer`, `frontend-engineer`, and `qa-engineer` each have a "Refinement mode" section. In it they read the build notes and the approved issues first and return one result per issue in place of the baseline completion message. The engineers change only what the issues require and leave working code as it is; QA changes nothing and reports.
+
+---
+
 ## Key files Claude Code should read first
 
 When starting a session on this repo, read in this order:
@@ -153,6 +239,8 @@ When a user invokes `/sprint-zero <url>`, the orchestrator adds:
 5. `docs/prd.md`
 6. `docs/api-contract.md`
 7. `docs/decisions.md`
+
+When a user invokes `/sprint-zero-refine`, the orchestrator reads the build's `docs/scope.md`, its `docs/build-notes.md` if there is one, the issues already in `docs/issues/`, and then `docs/user-stories.md` and `docs/api-contract.md` to choose each track.
 
 ---
 
@@ -199,6 +287,8 @@ Sprint Zero uses a two-tier pattern that respects Claude Code's sub-agent limita
 - `backend-engineer`, `frontend-engineer`, `qa-engineer` are **worker sub-agents** — isolated context, no sub-agent spawning themselves
 
 When running a build, invoke tech-lead first for the brief, then follow the recommended execution order it returns.
+
+A refinement batch keeps the same two tiers but skips tech-lead: the approved issues are the brief, and the main session spawns only the engineers whose side is touched, then qa-engineer. See "Refinement" above.
 
 ---
 
