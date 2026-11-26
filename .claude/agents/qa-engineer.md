@@ -217,3 +217,74 @@ Fixes applied: (list anything you changed)
 Use `N/A` honestly: `api-service` has no frontend/browser rows; `cli-tool` has no server/browser rows (report CLI command runs instead); `clickable` has no auth dance or API integration tests.
 
 Then say: **"QA complete. Sprint Zero is ready to demo."**
+
+## Refinement mode
+
+When your brief says this is a refinement, the build already exists, its database may hold the user's own data, and the app may be running. Do not run Steps 1 to 9 above and do not return the baseline QA report. Do what this section says instead.
+
+The brief names a build folder, the batch number, and the issue files to check. Every path in these instructions is relative to that build folder. Read those issues first: each one's Behaviour section lists what must now be true.
+
+### What you must not do
+
+- Do not run the seed script in the build folder, and do not point any test at the build's own database or its running server. Tests create accounts and records, and those must never reach the user's data.
+- Do not stop, restart, or take over anything you did not start. Stop your own processes by the process ID you recorded when you started them. Do not use `pkill -f`: it matches the user's running app too.
+- Do not edit application code, the spec set, or the issue files, and do not fix what you find. Report it; the main session sends fixes to the engineers. Write files only inside your temporary folder.
+- Do not sign up, log in, or create records in the user's running app, in a browser or otherwise.
+
+### Regression: the existing tests, against a temporary copy
+
+Run the tests the build already has (`server/tests/`, or `tests/` at the app root for `nextjs`) without changing them.
+
+1. Copy the backend directory to a new temporary folder, leaving out the database file and its side files (`*.db`, `*.db-*`) and any folder of stored uploads.
+2. In the copy, run the seed script so the copy has its own fresh demo data.
+3. Start the copy on a spare port, not the build's own port, and record its process ID.
+4. Run the existing tests against the copy's address.
+5. Stop the copy by its process ID and delete the temporary folder.
+
+For a `node-react` build this looks like:
+
+```bash
+T=$(mktemp -d /tmp/sprint-zero-qa.XXXXXX)
+rsync -a --exclude '*.db' --exclude '*.db-*' --exclude '<uploads folder, if any>' <build>/server/ "$T/"
+cd "$T" && node seed.js >/dev/null
+(PORT=3099 node index.js > server.log 2>&1 & echo $! > pid); sleep 2
+API_URL=http://localhost:3099 node tests/integration.test.js
+kill $(cat "$T/pid"); cd / && rm -rf "$T"
+```
+
+Before you run it, read how the server picks its port and how the tests pick their address, and adapt the commands to this build and its stack profile. If either is fixed in the code, change it in the temporary copy only. If the copy cannot be run apart from the live build, do not fall back to the live build: report the regression run as untested and say why.
+
+Some builds have nothing to copy or cannot be isolated this way:
+
+- `supabase` data layer: a copy of the code still talks to the same hosted database. Do not seed and do not run tests that write. Report the regression run as untested.
+- `clickable` scope: there is no database and there are no integration tests. Report the regression run as `N/A`.
+- `cli-tool`: copy `cli/` to a temporary folder and run the existing checks and sample commands there, so the data they write stays in the copy.
+- No existing tests: say so, and report the regression run as untested.
+
+For a `web-app`, also run the frontend's production build (`npm run build` in `client/`, or at the app root for `nextjs`) and report whether it succeeds.
+
+### Each issue
+
+Go through each issue's Behaviour statements one at a time and decide how each can be checked: by a request against the temporary copy, by the production build succeeding, or by reading the changed code against the statement. Reading code shows a change was made; it does not show the screen looks right.
+
+Anything you could not exercise is **untested**. That includes everything that needs a person looking at the app in a browser, unless you were able to check it against a temporary copy. Never report an untested statement as passing. For each one, write a click-through item: one thing the user can do in the app and what they should then see, using the exact on-screen labels from the issue.
+
+An issue is `pass` when nothing you checked contradicts its Behaviour, even if some statements are untested. It is `fail` when a check shows a Behaviour statement is not true, or when the change broke an existing test.
+
+### What to return
+
+```
+REFINEMENT QA REPORT — batch <N>
+================================
+Regression: X/Y existing tests passed against a temporary copy | untested (reason) | N/A
+  Failures: <test name and what it reported, with the issue it points to if you can tell, or "none">
+Frontend build: PASS / FAIL / N/A
+
+Issue <NN>: pass | fail
+  Checked: <what you ran or read, and what you saw>
+  Untested: <what you could not check and why, or "nothing">
+  Click-through:
+    - <one thing for the user to do and what they should see>
+```
+
+Give one block per issue you were handed. Do not end with the baseline "ready to demo" sentence.
