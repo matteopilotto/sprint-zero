@@ -132,7 +132,7 @@ If the problem is still there after the retry, the run does not go on trying. It
 STATE: REFINE_NEEDED — issue(s) <NN, NN> failed again after one retry and are still `approved`. Read the Results section of each to see what failed, then run /sprint-zero-refine <build> with no request to try them again. To change what an issue asks for, edit its file first. To give one up, set its Status line to `dropped` first.
 ```
 
-Print it as the last thing in step 8, after the batch summary, the suggested commit, and the app step (8c to 8e), with the real issue numbers and build folder filled in. Those steps still run: issues that passed are worth committing and trying.
+Step 8f prints it, with the real issue numbers and build folder filled in. 8f is the last sub-step of the run and comes after the batch summary, the suggested commit, and the app step (8c to 8e). Those steps still run: issues that passed are worth committing and trying. No branch of 8e ends the run before the state is printed.
 
 What a run that ends this way leaves behind:
 
@@ -687,7 +687,7 @@ The click-through list gathers the items from every built issue, grouped by issu
 
 After the table, add one or two plain sentences: that `built` means the code is in and the automated checks passed but nobody has tried it in the app yet, and, if the server changed and the app is already running, that the server needs a restart before the changes show.
 
-If any issue stayed `approved`, the run ends in `REFINE_NEEDED`. Say so here in one line, carry on with 8d and 8e, and then print the state and its recovery instruction as the last thing of the run, as set out in "When a batch cannot finish".
+If any issue stayed `approved`, the run ends in `REFINE_NEEDED`. Say so here in one line and carry on with 8d and 8e. Step 8f then prints the state and its recovery instruction.
 
 ### 8d. Suggest a commit
 
@@ -708,9 +708,11 @@ The app may be running, and the user may be in the middle of something in it. Ne
 
 Use the directories, run commands, and ports resolved from `<build>/docs/scope.md` and `.claude/stacks.md` before step 1. Run every command from inside `<build>`. Do not assume the `node-react` values.
 
-For a `cli-tool` there is nothing to start. Print one example command and finish.
+Every branch below ends by going to 8f. Two of them ask the user a question first. When the run is ending in `REFINE_NEEDED`, print the state as 8f describes before asking, in the same message, so that it is on screen whether or not the user answers. Do not print it a second time after the answer.
 
-**With `--no-launch`.** Start nothing, stop nothing, and open nothing. Print the run command for each part of the build, with the folder to run it in, and add that a server already running needs a restart to pick up backend changes. Finish.
+For a `cli-tool` there is nothing to start. Print one example command and go to 8f.
+
+**With `--no-launch`.** Start nothing, stop nothing, and open nothing. Print the run command for each part of the build, with the folder to run it in, and add that a server already running needs a restart to pick up backend changes. Go to 8f.
 
 **Otherwise, check each of the build's ports** to see whether something is listening, for example with `lsof -nP -iTCP:<port> -sTCP:LISTEN` on macOS or Linux, or `netstat -ano | findstr :<port>` on Windows. This only looks; it stops nothing.
 
@@ -722,17 +724,23 @@ For a `cli-tool` there is nothing to start. Print one example command and finish
 4. Open the app: the frontend address for a `web-app`, the API root (or `/docs` for FastAPI) for an `api-service`. Use `open`, `xdg-open`, `wslview`, or `cmd.exe /c start` as the system provides. If none works, print the address instead.
 5. Print the addresses, the process IDs, and how to stop each one later by its process ID (`kill <pid>`). Print no demo login: the seed was not run, and the user's own accounts are still there.
 
-If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it.
+If a part does not come up, say which and print its run command. Do not retry, and do not stop or change anything else to make room for it. Go to 8f.
 
 **If something is listening on any of the build's ports**, treat the app as running. Stop nothing and start nothing yet. Print which ports are in use and by what (the process ID from the check above and its command line, `ps -p <pid> -o command=`), then:
 
-- If only the client changed in this batch, say that the changes show after a refresh in the browser and no restart is needed. Finish.
+- If only the client changed in this batch, say that the changes show after a refresh in the browser and no restart is needed. Go to 8f.
 - If the server changed (the backend engineer reported changed files), say that the backend needs a restart before those changes show, and ask:
 
   > The backend on port <backend-port> is already running (process <pid>: `<command line>`). It needs a restart to pick up this batch. Restarting it will interrupt anything in progress in the app. Shall I restart it, or will you?
 
-  Wait for the reply. If the user agrees, stop that one process by its process ID with `kill <pid>`, start the backend again with its resolved run command, check it answers, and print its new process ID. Do not use `pkill`, do not stop any other process, and do not touch the frontend. If the user declines or does not answer plainly, leave it running and print the run command so they can restart it themselves.
-- If a part of the build is not running while another is (for example the frontend is up and the backend port is free), say so and ask whether to start the missing part. Start it only on a yes.
+  Wait for the reply. If the user agrees, stop that one process by its process ID with `kill <pid>`, start the backend again with its resolved run command, check it answers, and print its new process ID. Do not use `pkill`, do not stop any other process, and do not touch the frontend. If the user declines or does not answer plainly, leave it running and print the run command so they can restart it themselves. Go to 8f.
+- If a part of the build is not running while another is (for example the frontend is up and the backend port is free), say so and ask whether to start the missing part. Start it only on a yes. Go to 8f.
+
+### 8f. End the run
+
+If any issue sent to build is still `approved`, print the `REFINE_NEEDED` state and its recovery instruction, as set out in "When a batch cannot finish", unless 8e already printed it ahead of a question. It is the last thing the run prints apart from the outcome of such a question.
+
+Otherwise there is nothing more to print, and the run ends here.
 
 <!-- $ARGUMENTS is the interpolation token Claude Code replaces with everything the user typed after /sprint-zero-refine. It must appear in the file for the build folder and the requests to be accessible throughout these instructions. -->
 $ARGUMENTS
