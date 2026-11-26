@@ -116,7 +116,7 @@ If the problem is still there after the retry, the run does not go on trying. It
 STATE: REFINE_NEEDED — issue(s) <NN, NN> failed again after one retry and are still `approved`. Read the Results section of each to see what failed, then run /sprint-zero-refine <build> with no request to try them again. To change what an issue asks for, edit its file first. To give one up, set its Status line to `dropped` first.
 ```
 
-Print it as the last thing in step 8, after the batch summary, with the real issue numbers and build folder filled in.
+Print it as the last thing in step 8, after the batch summary, the suggested commit, and the app step (8c to 8e), with the real issue numbers and build folder filled in. Those steps still run: issues that passed are worth committing and trying.
 
 What a run that ends this way leaves behind:
 
@@ -264,8 +264,6 @@ Change nothing else in the file. This is the one edit to an existing issue file 
 Nothing else makes an issue `confirmed`: not a QA pass, not a clean regression run, not your own reading of the code, and not the user's silence. If the user asks for an issue to be marked without saying they tried it, ask once whether they have. If the user never answers the offer, leave the issues `built`; they are listed again on the next run.
 
 If the user says an earlier issue does not work, leave it `built` and treat what they describe as a new request in this batch, with its own issue.
-
-<!-- A later ticket adds to this step: the git check before a batch starts. -->
 
 ---
 
@@ -565,7 +563,7 @@ The click-through list gathers the items from every built issue, grouped by issu
 
 After the table, add one or two plain sentences: that `built` means the code is in and the automated checks passed but nobody has tried it in the app yet, and, if the server changed and the app is already running, that the server needs a restart before the changes show.
 
-If any issue stayed `approved`, the run ends in `REFINE_NEEDED`: print the state and its recovery instruction as set out in "When a batch cannot finish".
+If any issue stayed `approved`, the run ends in `REFINE_NEEDED`. Say so here in one line, carry on with 8d and 8e, and then print the state and its recovery instruction as the last thing of the run, as set out in "When a batch cannot finish".
 
 ### 8d. Suggest a commit
 
