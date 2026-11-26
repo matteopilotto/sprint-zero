@@ -249,9 +249,9 @@ Run the tests the build already has, without changing them. Use the build's reso
 2. In the copy, run the seed script so the copy has its own fresh demo data.
 3. Start the copy on a spare port, not the build's own port, and record its process ID.
 4. Run the existing tests against the copy's address.
-5. Stop the copy by its process ID and delete the temporary folder.
+5. When every check in this section and the ones below is finished, stop the copy by its process ID and delete the temporary folder.
 
-Example for a `node-react` build only. Every other stack profile follows the same five steps with its own resolved commands:
+Example for a `node-react` build only. Every other stack profile follows the same five steps with its own resolved commands. The last line is step 5 and runs only after all your other checks:
 
 ```bash
 T=$(mktemp -d /tmp/sprint-zero-qa.XXXXXX)
@@ -271,7 +271,9 @@ Some builds have nothing to copy or cannot be isolated this way:
 - `cli-tool`: copy `cli/` to a temporary folder and run the existing checks and sample commands there, so the data they write stays in the copy.
 - No existing tests: say so, and report the regression run as untested.
 
-For a `web-app`, also run the frontend's production build (`npm run build` in `client/`, or at the app root for `nextjs`) and report whether it succeeds.
+For a `web-app`, also run the frontend's production build and report whether it succeeds. Never run it in the live folder: a build writes output files, and you write only inside your temporary folder.
+
+Copy the resolved frontend directory (for `nextjs`, the single app directory) to its own folder inside your temporary folder. Take its installed dependencies with it so that nothing needs installing, and leave out any earlier build output. Run the resolved production build command in that copy. If the copy cannot be built there, report the frontend build as untested and say why; do not fall back to the live folder.
 
 ### Each issue
 
@@ -307,7 +309,7 @@ When you do run it, every rule above still applies: new accounts are created in 
 REFINEMENT QA REPORT — batch <N>
 ================================
 Regression: X/Y existing tests passed against a temporary copy | untested (reason) | N/A
-Frontend build: PASS / FAIL / N/A
+Frontend build: PASS / FAIL / untested (reason) / N/A
 Regression failures: none
   (or one line per failing test, and one for a failing frontend build:)
   <test name, or "frontend build">: <what it reported>. Implicated: issue <NN>[, <NN>] | cannot tell
