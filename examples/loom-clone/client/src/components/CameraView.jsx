@@ -36,7 +36,8 @@ export default function CameraView({ canvasRef, mode, settings, onChange, record
         {settings.cameraView === 'dim' && <div className="camera-dim" data-testid="camera-dim" />}
         {settings.cameraView === 'hide' && (
           <div className="camera-hidden" data-testid="camera-hidden">
-            {recording ? 'Camera hidden — still recording' : 'Camera hidden'}
+            <span>Camera hidden</span>
+            {recording && <span className="camera-hidden-note">still recording</span>}
           </div>
         )}
       </div>
