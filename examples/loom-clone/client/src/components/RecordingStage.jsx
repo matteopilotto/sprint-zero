@@ -4,9 +4,25 @@ import { formatDuration } from '../format.js'
 
 // What the recorder shows once "Start recording" has been clicked:
 // the countdown, then the timer overlay and controls, then the save status.
-export default function RecordingStage({ recorder, mode }) {
-  const { phase, countdown, elapsedSeconds, saveError, blobUrl } = recorder
+export default function RecordingStage({ recorder, mode, floating }) {
+  const { phase, countdown, elapsedSeconds, saveError, notice, wholeScreen, blobUrl } = recorder
   const [confirmingCancel, setConfirmingCancel] = useState(false)
+
+  // Shown when the browser offers a floating window and it is not open, either
+  // because the browser did not allow it to open by itself or it was closed.
+  const openFloating = floating.available && !floating.isOpen && (
+    <button className="button" onClick={floating.open} data-testid="open-floating-controls-button">
+      Open floating controls
+    </button>
+  )
+
+  // Sharing the entire screen records everything on it, floating window included.
+  const floatingClosed = floating.available && wholeScreen && !floating.isOpen && (
+    <p className="notice">
+      Floating controls are closed because you are sharing your entire screen, and they would appear in the video.
+      Share a tab or a window to use them. With a second screen, you can open them and drag them there.
+    </p>
+  )
 
   if (phase === 'countdown') {
     return (
@@ -15,6 +31,8 @@ export default function RecordingStage({ recorder, mode }) {
           {countdown}
         </p>
         <p className="muted">Recording starts when the countdown ends.</p>
+        {floatingClosed}
+        {openFloating}
       </div>
     )
   }
@@ -67,10 +85,15 @@ export default function RecordingStage({ recorder, mode }) {
           Cancel
         </button>
       </div>
+      {notice && <p className="notice">{notice}</p>}
+      {floatingClosed}
+      {openFloating}
       <p className="muted">
-        {mode === 'camera'
-          ? 'Recording carries on if you switch to another tab or window. Come back to this tab to pause or stop.'
-          : 'Recording another window? Come back to this tab to pause or stop, or use the browser\'s "Stop sharing" button.'}
+        {floating.isOpen
+          ? 'Recording carries on if you switch to another tab or window. Use the floating controls to pause, stop, or cancel from there.'
+          : mode === 'camera'
+            ? 'Recording carries on if you switch to another tab or window. Come back to this tab to pause or stop.'
+            : 'Recording another window? Come back to this tab to pause or stop, or use the browser\'s "Stop sharing" button.'}
       </p>
       {confirmingCancel && (
         <ConfirmDialog

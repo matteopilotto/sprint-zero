@@ -1,15 +1,19 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import RecorderSetup from '../components/RecorderSetup.jsx'
 import RecordingStage from '../components/RecordingStage.jsx'
 import CameraView from '../components/CameraView.jsx'
+import FloatingControls from '../components/FloatingControls.jsx'
 import { loadSettings, saveSettings, saveSettingsPatch } from '../recorder/settings.js'
 import { useCamera } from '../recorder/useCamera.js'
 import { useRecorder } from '../recorder/useRecorder.js'
+import { canFloat, useFloatingWindow } from '../recorder/useFloatingWindow.js'
 
 const CAMERA_BLOCKED = "Camera access is blocked. Allow it in your browser's site settings, then try again."
 const canRecord = Boolean(navigator.mediaDevices?.getUserMedia) && typeof window.MediaRecorder !== 'undefined'
 const canShareScreen = Boolean(navigator.mediaDevices?.getDisplayMedia)
+// The phases in which a take is under way and can be paused, stopped or cancelled.
+const LIVE_PHASES = ['countdown', 'starting', 'recording', 'paused']
 
 export default function RecordPage() {
   const navigate = useNavigate()
@@ -28,6 +32,13 @@ export default function RecordPage() {
   const recorder = useRecorder({ getCameraCanvas, getCameraStream, onSaved })
   const { phase } = recorder
 
+  // "Floating controls" stay open only while a take is under way.
+  const { floatingWindow, open: openFloating, close: closeFloating } = useFloatingWindow()
+  const live = LIVE_PHASES.includes(phase)
+  useEffect(() => {
+    if (!live) closeFloating()
+  }, [live, closeFloating])
+
   // Segmentation failed to load or is too slow: use the real background.
   const onEffectFailed = useCallback(() => {
     setSettings((current) => ({ ...current, background: 'none' }))
@@ -38,7 +49,7 @@ export default function RecordPage() {
   // and it is switched off as soon as the recording stops.
   const cameraWanted = settings.mode !== 'screen'
   const supported = canRecord && (settings.mode === 'camera' || canShareScreen)
-  const cameraOn = cameraWanted && ['setup', 'countdown', 'starting', 'recording', 'paused'].includes(phase)
+  const cameraOn = cameraWanted && (phase === 'setup' || live)
   const camera = useCamera({
     canvasRef: cameraCanvasRef,
     streamRef: cameraStreamRef,
@@ -90,14 +101,22 @@ export default function RecordPage() {
 
   async function handleStart() {
     // Called straight from the click so the browser allows the screen picker.
-    const started = await recorder.start({
+    const starting = recorder.start({
       mode: settings.mode,
       micOn: settings.micOn,
+      computerAudio: settings.computerAudio,
       position: settings.position,
       mirror: settings.mirror,
       background: settings.background,
     })
+    // The floating window must also be asked for during the click, so it is
+    // requested now, right after the screen picker, without waiting for it.
+    if (settings.floatingControls) openFloating()
+    const started = await starting
     if (started) saveSettings(settings)
+    // Never started, or the entire screen is shared: the floating window would
+    // be in the video, so it is closed before the countdown ends.
+    if (!started || started.wholeScreen) closeFloating()
   }
 
   return (
@@ -129,10 +148,15 @@ export default function RecordPage() {
             onImageChosen={chooseImage}
             hint={hint}
             canStart={canStart}
+            canFloat={canFloat}
             onStart={handleStart}
           />
         ) : (
-          <RecordingStage recorder={recorder} mode={settings.mode} />
+          <RecordingStage
+            recorder={recorder}
+            mode={settings.mode}
+            floating={{ available: canFloat && live, isOpen: Boolean(floatingWindow), open: openFloating }}
+          />
         )}
 
         {cameraOn && (
@@ -145,6 +169,8 @@ export default function RecordPage() {
           />
         )}
       </div>
+
+      {floatingWindow && live && <FloatingControls floatingWindow={floatingWindow} recorder={recorder} />}
     </>
   )
 }

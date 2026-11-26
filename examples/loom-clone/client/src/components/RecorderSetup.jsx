@@ -19,10 +19,11 @@ const POSITIONS = [
 ]
 
 // The controls shown before recording starts.
-export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, onStart }) {
+export default function RecorderSetup({ settings, onChange, imageName, onImageChosen, hint, canStart, canFloat, onStart }) {
   const fileInput = useRef(null)
   const cameraOn = settings.mode !== 'screen'
   const hasBubble = settings.mode === 'screen_camera'
+  const sharesScreen = settings.mode !== 'camera'
 
   return (
     <div className="card setup" data-testid="recorder-setup">
@@ -43,6 +44,46 @@ export default function RecorderSetup({ settings, onChange, imageName, onImageCh
         />
         Microphone
       </label>
+
+      {sharesScreen && (
+        <div className="field">
+          <label className="choice toggle">
+            <input
+              type="checkbox"
+              name="computerAudio"
+              checked={settings.computerAudio}
+              onChange={(e) => onChange({ computerAudio: e.target.checked })}
+            />
+            Computer audio
+          </label>
+          {settings.computerAudio && (
+            <span className="muted">
+              Tick the audio option in the browser's share prompt. A tab or the entire screen can share audio; a
+              single window can't.
+            </span>
+          )}
+        </div>
+      )}
+
+      {canFloat && (
+        <div className="field">
+          <label className="choice toggle">
+            <input
+              type="checkbox"
+              name="floatingControls"
+              checked={settings.floatingControls}
+              onChange={(e) => onChange({ floatingControls: e.target.checked })}
+            />
+            Floating controls
+          </label>
+          {settings.floatingControls && sharesScreen && (
+            <span className="muted">
+              A small window that stays on top, to pause, stop, or cancel from anywhere. It closes if you share
+              your entire screen, because it would appear in the video.
+            </span>
+          )}
+        </div>
+      )}
 
       {cameraOn && (
         <>

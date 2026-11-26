@@ -6,15 +6,23 @@ import { useEffect, useRef, useState } from 'react'
 import { useApi } from '../api/client.js'
 import { createTicker } from './ticker.js'
 import { createCompositor } from './compositor.js'
+import { mixAudio } from './audioMix.js'
 import { makeSeekable } from './makeSeekable.js'
 
 const COUNTDOWN_MS = 3000
 // When the countdown ends the page needs a moment to remove it from the screen.
 // Recording starts this long afterwards, so the last "1" is never in the video.
 const SETTLE_MS = 250
+const NO_COMPUTER_AUDIO = "Computer audio isn't being recorded, because no audio was shared in the browser's prompt."
 const MIME_TYPES = ['video/webm;codecs=vp8,opus', 'video/webm']
 const MIC_BLOCKED =
   "Microphone access is blocked. Allow it in your browser's site settings, or turn the microphone off."
+
+// True when the whole screen (not a tab or a single window) is being shared.
+// Anything on that screen, including a floating window, ends up in the video.
+function isWholeScreen(track) {
+  return track.getSettings().displaySurface === 'monitor' || track.label.startsWith('screen:')
+}
 
 const stopTracks = (stream) => stream?.getTracks().forEach((track) => track.stop())
 
@@ -34,6 +42,8 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [wholeScreen, setWholeScreen] = useState(false)
   const [blobUrl, setBlobUrl] = useState(null)
 
   const phaseRef = useRef('setup')
@@ -56,6 +66,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     stopTracks(take.micStream)
     stopTracks(take.cameraFeed)
     take.compositor?.dispose()
+    take.audioMix?.dispose()
   }
 
   // "Camera only": the video track to record. With no mirror and no background
@@ -67,10 +78,11 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     return canvas ? canvas.captureStream(30) : null
   }
 
-  async function start({ mode, micOn, position, mirror, background }) {
+  async function start({ mode, micOn, computerAudio, position, mirror, background }) {
     if (phaseRef.current !== 'setup' || startingRef.current) return false
     startingRef.current = true
     setError('')
+    setNotice('')
     const take = { mode, chunks: [], pausedTotal: 0, pauseStart: null }
     try {
       if (mode === 'camera') {
@@ -84,7 +96,11 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
       } else {
         // The screen picker must come first, straight from the click.
         try {
-          take.displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+          // With "Computer audio" on, the browser's prompt offers to share the
+          // sound of a tab or of the whole computer along with the picture.
+          take.displayStream = await navigator.mediaDevices.getDisplayMedia(
+            computerAudio ? { video: true, audio: true, systemAudio: 'include' } : { video: true, audio: false },
+          )
         } catch (err) {
           // Dismissing the picker is not an error: stay on the setup screen.
           if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
@@ -94,6 +110,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
         }
         take.displayTrack = take.displayStream.getVideoTracks()[0]
         take.sourceTrack = take.displayTrack
+        take.wholeScreen = isWholeScreen(take.displayTrack)
       }
 
       if (micOn) {
@@ -127,7 +144,24 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
           return false
         }
       }
-      take.stream = new MediaStream([videoTrack, ...(take.micStream?.getAudioTracks() ?? [])])
+
+      // Sound: the computer's audio (if it was shared) and the microphone.
+      // Two sources are mixed into one track, because the file holds only one.
+      const sounds = [...(take.displayStream?.getAudioTracks() ?? []), ...(take.micStream?.getAudioTracks() ?? [])]
+      if (computerAudio && mode !== 'camera' && take.displayStream.getAudioTracks().length === 0) {
+        setNotice(NO_COMPUTER_AUDIO)
+      }
+      let audioTracks = sounds.slice(0, 1)
+      if (sounds.length > 1) {
+        try {
+          take.audioMix = mixAudio(sounds)
+          audioTracks = [take.audioMix.track]
+        } catch {
+          audioTracks = take.micStream.getAudioTracks() // mixing failed: keep the voice
+          setNotice("Computer audio couldn't be mixed with the microphone, so only the microphone is being recorded.")
+        }
+      }
+      take.stream = new MediaStream([videoTrack, ...audioTracks])
 
       // The browser's own "Stop sharing" button ends the screen track. In
       // "Camera only" there is no screen, so the camera track ending (for
@@ -136,11 +170,12 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
       take.sourceTrack.addEventListener('ended', take.onEnded)
 
       takeRef.current = take
+      setWholeScreen(Boolean(take.wholeScreen))
       take.countdownStart = performance.now()
       setCountdown(3)
       setPhase('countdown')
       take.ticker = createTicker(mode === 'screen_camera' ? 30 : 10, onTick)
-      return true
+      return { wholeScreen: Boolean(take.wholeScreen) }
     } finally {
       startingRef.current = false
     }
@@ -314,5 +349,5 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     [],
   )
 
-  return { phase, countdown, elapsedSeconds, error, saveError, blobUrl, start, pause, resume, stop, cancel, retrySave }
+  return { phase, countdown, elapsedSeconds, error, saveError, notice, wholeScreen, blobUrl, start, pause, resume, stop, cancel, retrySave }
 }

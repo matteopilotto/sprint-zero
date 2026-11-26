@@ -1,11 +1,13 @@
-// Remembers the last mode, microphone, background, bubble position, mirror and
-// camera view choices in this browser. A custom image is not kept, so "custom"
+// Remembers the last mode, microphone, computer audio, floating controls,
+// background, bubble position, mirror and camera view choices in this browser. A custom image is not kept, so "custom"
 // falls back to "none".
 const KEY = 'loomclone_recorder_settings'
 
 export const DEFAULT_SETTINGS = {
   mode: 'screen',
   micOn: true,
+  computerAudio: false,
+  floatingControls: true,
   background: 'none',
   position: 'bottom-left',
   mirror: false,
@@ -29,8 +31,9 @@ export function normalizeSettings(raw) {
   for (const key of Object.keys(ALLOWED)) {
     if (ALLOWED[key].includes(source[key])) settings[key] = source[key]
   }
-  if (typeof source.micOn === 'boolean') settings.micOn = source.micOn
-  if (typeof source.mirror === 'boolean') settings.mirror = source.mirror
+  for (const key of ['micOn', 'computerAudio', 'floatingControls', 'mirror']) {
+    if (typeof source[key] === 'boolean') settings[key] = source[key]
+  }
   if (settings.background === 'custom') settings.background = 'none'
   return settings
 }
