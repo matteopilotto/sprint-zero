@@ -620,9 +620,12 @@ A failure is either of these in QA's report: an issue marked `fail`, or a regres
 
 Re-spawn the responsible engineer once, with QA's failure report, then run QA once more.
 
-1. Work out who is responsible. For a failed issue it is the engineer for that issue's area; for `Area: both`, the side QA's report points to, or both engineers if it does not say. For a failing existing test it is `backend-engineer`. For a failing frontend build it is `frontend-engineer`.
+1. Work out who is responsible, choosing only among the engineers spawned in this run. Never spawn an engineer for an area the run did not touch.
+   - If only one engineer was spawned, it is that one, whatever failed and whichever area the failing check is in.
+   - If both were spawned and an issue failed, it is the engineer for that issue's area; for `Area: both`, the one QA's report points to, or both if it does not say.
+   - If both were spawned and there is a regression failure, it is the engineer whose changed files the failure points to, or both if it points to neither.
 2. Leave out any issue that was already retried in 6d. An issue gets one retry per run, so it has failed: it stays `approved`.
-3. Print who you are re-spawning and why, then spawn. The brief is the one from 6b, cut down to the issues involved, plus: that this is a retry after QA and the only one; QA's failure text, word for word; and that the fix belongs in the code, not in the existing tests. For a regression failure QA could not tie to one issue, hand the engineer all of its issues from this batch as the likely cause.
+3. Print who you are re-spawning and why, then spawn. The brief is the one from 6b, cut down to the issues involved, plus: that this is a retry after QA and the only one; QA's failure text, word for word; and that the fix belongs in the code, not in the existing tests. For a regression failure, hand the engineer those of its issues that QA named as implicated, or all of its issues from this run when QA wrote "cannot tell".
 4. When the retry returns, spawn `qa-engineer` again with the same prompt as before, adding the files the retry changed. This second report replaces the first for step 8.
 
 Whatever the second report says, do not retry again and do not run QA a third time. If it still shows a failure, the issues it fails, and the issues a regression failure implicates under the rule in step 8a, stay `approved` and the run ends in `REFINE_NEEDED`.
