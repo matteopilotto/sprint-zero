@@ -467,7 +467,13 @@ The user may overrule a track. When they ask for an issue to move to the other t
 
 When the user approves, read every issue file of this batch again from disk before doing anything else. The user may have edited them, and the file as it now stands is what gets built: its Behaviour, its Area, and its title replace whatever you remember writing. A file whose status the user changed to `dropped` by hand is a rejected issue.
 
-The same goes for the track. The `Track:` line in the file decides what happens in step 5, whatever you proposed. If the user changed a `Track:` line to `straight to code`, set that issue's Spec changes to `None.` and change no spec file for it. If the user changed one to `spec first` and its Spec changes section is still `None.`, work the list out as in step 2d, write it into the file, show it to the user, and wait for their agreement on that issue before going on: a spec-first issue always lists its spec changes before it is approved. If the user edited the Spec changes list itself, the edited list is the one step 5 follows.
+The same goes for the track. The `Track:` line in the file decides what happens in step 5, whatever you proposed.
+
+If the user changed a `Track:` line to `straight to code`, set that issue's Spec changes to `None.` and change no spec file for it.
+
+If the user changed one to `spec first` and its Spec changes section is still `None.`, work the list out as in step 2d, write it into the file, show it to the user, and wait for their agreement on that issue before going on: a spec-first issue always lists its spec changes before it is approved.
+
+If the user edited the Spec changes list itself, the edited list is the one step 5 follows.
 
 For each issue the user rejected, change its status to `Status: dropped` and change nothing else in it. Never delete, rename, or renumber a dropped issue's file: it is the record of what the user decided against.
 

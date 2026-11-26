@@ -214,7 +214,11 @@ Once a baseline exists, the build's database holds the user's own data, not test
 
 ### Build notes
 
-`docs/build-notes.md` carries what one batch learned to the next. It has two sections. House rules are standing instructions from the user about how the build may be worked on, for example "do not drive a browser"; the orchestrator writes them only after the user has agreed the wording, and they override the agents' defaults and the command's own steps. Constraints are facts about how the build works that no spec file holds; engineers append them when they finish, and this is the only file in `docs/` an engineer writes to during a refinement. Every engineer and QA brief says to read the build notes first.
+`docs/build-notes.md` carries what one batch learned to the next. It has two sections, and every engineer and QA brief says to read the file first.
+
+House rules are standing instructions from the user about how the build may be worked on, for example "do not drive a browser"; the orchestrator writes them only after the user has agreed the wording, and they override the agents' defaults and the command's own steps.
+
+Constraints are facts about how the build works that no spec file holds; engineers append them when they finish, and this is the only file in `docs/` an engineer writes to during a refinement.
 
 ### What the command declines, and the guard
 

@@ -137,7 +137,15 @@ The build notes are `docs/build-notes.md`. The file has two sections. "House rul
    - Keep the seed script in step with the new schema so that a fresh copy still seeds, but do not run it here.
    - Name every schema change in your result notes.
 
-When you finish, append any constraint you discovered to `docs/build-notes.md` under `## Constraints`. This is the one file in `docs/` you may write to. A constraint is a fact about how this build works that the next engineer needs and could not learn from the spec set, for example an order of calls that must be kept or a limit a library imposes. It is not a record of what you changed; that goes in your result. Write each one as a single list item: a short name in bold, the fact in a sentence or two, the file it concerns, and the issue number in brackets. Replace the section's `None yet.` line with your first entry. Re-read the file just before you append, since the other engineer may be adding to it at the same time, and add only your own lines: do not edit or remove existing entries, and never touch the "House rules" section. If your change makes an existing constraint untrue, say so in your result. If you discovered nothing, add nothing.
+When you finish, append any constraint you discovered to `docs/build-notes.md` under `## Constraints`. This is the one file in `docs/` you may write to.
+
+A constraint is a fact about how this build works that the next engineer needs and could not learn from the spec set, for example an order of calls that must be kept or a limit a library imposes. It is not a record of what you changed; that goes in your result.
+
+Write each one as a single list item: a short name in bold, the fact in a sentence or two, the file it concerns, and the issue number in brackets. Replace the section's `None yet.` line with your first entry.
+
+Re-read the file just before you append, since the other engineer may be adding to it at the same time, and add only your own lines: do not edit or remove existing entries, and never touch the "House rules" section.
+
+If your change makes an existing constraint untrue, say so in your result. If you discovered nothing, add nothing.
 
 Do not return the baseline completion sentence. Return one result per issue you were handed, in this format:
 
