@@ -116,6 +116,26 @@ An issue always has exactly one of these six statuses. They are the kit's own li
 | `confirmed`  | The user has tried it and accepted it                                   |
 | `dropped`    | The user decided against it                                             |
 
+## When a batch cannot finish
+
+An engineer may fail an issue, and QA may find that an issue does not do what it says or that the batch broke an existing test. Each such failure gets one automatic retry: the responsible engineer is re-spawned once with the failure report. Step 6d covers an engineer's failure and step 7 covers QA's. No issue is retried more than once in a run.
+
+If the problem is still there after the retry, the run does not go on trying. It finishes the report in step 8 and ends in one named state:
+
+```
+STATE: REFINE_NEEDED — issue(s) <NN, NN> failed again after one retry and are still `approved`. Read the Results section of each to see what failed, then run /sprint-zero-refine <build> with no request to try them again. To change what an issue asks for, edit its file first. To give one up, set its Status line to `dropped` first.
+```
+
+Print it as the last thing in step 8, after the batch summary, the suggested commit, and the app step (8c to 8e), with the real issue numbers and build folder filled in. Those steps still run: issues that passed are worth committing and trying.
+
+What a run that ends this way leaves behind:
+
+- Issues that passed are `built`, exactly as in a clean run. Good work is not held back by a failure elsewhere in the batch.
+- Failing issues are `approved`, and the Results section of each records what failed, in the engineer's or QA's own words.
+- Running the command again with no request picks the `approved` issues up without asking for approval a second time (step 2a).
+
+Never mark a failing issue `built` to close a batch, and never set one to `dropped` unless the user tells you to. Only the user drops an issue.
+
 ## Build notes
 
 The build notes file is `<build>/docs/build-notes.md`. It carries what one batch learned to the next: a sub-agent spawned in a later batch starts with no memory, and this file is how it finds out what the user has ruled and what earlier engineers discovered. Build notes and house rule are used here as `GLOSSARY.md` defines them.
@@ -225,9 +245,35 @@ Then stop and wait for the user's reply. Write nothing and spawn no one while wa
 
 ## Step 1 — Check in
 
-This step has no actions yet. Go to step 2.
+### 1a. Earlier issues the user has not tried
 
-<!-- Later tickets add to this step: the check-in on earlier issues still `built`, and the git check before a batch starts. -->
+Every run starts here, whether it brings a new request or not.
+
+Look through `<build>/docs/issues/` for issues with `Status: built`. These are issues from earlier batches whose code is in but which the user has not said they tried. If the folder does not exist or holds no such issue, print nothing and go on.
+
+If there are some, print a short list, oldest first, and the offer:
+
+> Built in earlier batches and still waiting for you to try:
+>
+> - 03 <title> (batch 1)
+> - 05 <title> (batch 2)
+>
+> If you have tried any of these in the app and they work, tell me the numbers and I will mark them `confirmed`. You can ignore this; it does not hold up the new batch.
+
+Do not wait for an answer. Carry on with the run in the same turn.
+
+### 1b. Marking an issue confirmed
+
+An issue becomes `confirmed` only when the user says they have tried it and it works. They may say so in the request itself, in their reply at the approval step, or at any later point in the conversation. When they do:
+
+1. Change the issue's header to `Status: confirmed`.
+2. Add one line at the end of its Results section: `**Confirmed:** by the user, <today's date>.`
+
+Change nothing else in the file. This is the one edit to an existing issue file that may happen before the approval in step 4; it touches no spec file and no code.
+
+Nothing else makes an issue `confirmed`: not a QA pass, not a clean regression run, not your own reading of the code, and not the user's silence. If the user asks for an issue to be marked without saying they tried it, ask once whether they have. If the user never answers the offer, leave the issues `built`; they are listed again on the next run.
+
+If the user says an earlier issue does not work, leave it `built` and treat what they describe as a new request in this batch, with its own issue.
 
 ---
 
@@ -235,9 +281,30 @@ This step has no actions yet. Go to step 2.
 
 ### 2a. Check there is a request
 
-If no request text is left after the build folder, print this and stop:
+Look in `<build>/docs/issues/` for issues with `Status: approved`. Those are issues the user already agreed to that an earlier run did not finish, most often because the batch stopped in `REFINE_NEEDED`.
 
+If there is request text, this run is a new batch. Leave any `approved` issues from earlier runs out of it; tell the user in one line which numbers are still waiting and that running the command with no request resumes them. Then go to 2b.
+
+If no request text is left after the build folder and any flags, this run is a resume. A prompt that holds only a house rule is not a resume; "Build notes" above covers that run.
+
+**Nothing to resume.** If no issue is at `approved`, print this and stop:
+
+> Nothing to resume: no issue in `<build>` is waiting at `approved`.
+>
 > Tell me what to change. For example: `/sprint-zero-refine the save button stays greyed out after an error`.
+
+**Something to resume.** Otherwise:
+
+1. Read every `approved` issue file from disk, in full. The user may have edited it since the failed run, and the file as it now stands is what gets built. Its Results section says what failed last time.
+2. Print which issues are being resumed, and that no approval is needed:
+
+   > Resuming <count> issue(s) left at `approved`: 05 <title> (batch 2), 06 <title> (batch 2). You approved these already, so I am going straight to the build.
+
+3. Skip the rest of step 2 and all of steps 3 and 4. Write no new issue file, do not ask for approval again, and do not change any issue's number, `Batch:` value, or status. Go to step 5. A spec edit that an earlier run already made is not made a second time.
+
+From there a resume is an ordinary run with two differences. Each engineer's brief in step 6b also says that these issues were attempted before, that the Results section of each says what went wrong, and that part of the change may already be in the code. And wherever a later step prints batch `<N>`, use the `Batch:` value of the resumed issues, naming each batch if they come from more than one.
+
+A resume gets the same single retry as any other run (see "When a batch cannot finish"). Issues that fail again stay `approved` and can be resumed again.
 
 ### 2b. Split into refinements
 
@@ -473,7 +540,21 @@ Each engineer returns one result per issue it was handed: `done`, `failed`, or `
 
 An issue is ready for QA when every engineer it was sent to returned `done` or `no change needed` for it. If an engineer returns `failed` for an issue, or returns no result for it, that issue has failed: keep its status `approved` and keep the engineer's explanation for its Results section.
 
-<!-- A later ticket adds the single retry and the named failure state here. -->
+### 6d. Retry a failed issue once
+
+If any issue failed in 6c, re-spawn the engineer that failed it, once. Print which engineer you are re-spawning and for which issue numbers. If both engineers failed issues, re-spawn both in the same turn.
+
+The retry brief is the brief from 6b, cut down to the issues that engineer failed, plus:
+
+- That this is a retry of a failed attempt, and the only one.
+- The engineer's own failure report for each issue, word for word. If it returned no result for an issue, say that.
+- That it should fix what the report describes and return a result per issue in the same format as before.
+
+Do not suggest a fix. The engineer reads the report and the issue.
+
+Take the retry's results in place of the first ones. An issue the retry returned `done` or `no change needed` for is now ready for QA. An issue that failed again is not retried a second time: it stays `approved`, the run will end in `REFINE_NEEDED`, and both failure reports go into its Results section.
+
+Do not stop here. The other issues of the batch still go to QA in step 7, so that work which passed is not held back by work which failed.
 
 ---
 
@@ -501,6 +582,19 @@ The QA prompt contains:
 A batch touches auth when an approved issue changes signing up, logging in, logging out, how the session is kept, which pages or endpoints need a login, or how the server works out who a request comes from; or when an engineer reported changing a file that does any of those (the auth routes or middleware, the session context, the protected route wrapper, the login or signup page). When neither is true, tell QA the batch does not touch auth and that the full auth sequence must not be run. The existing tests still run in every batch, and they include whatever auth tests the build already has.
 
 QA returns one regression result for the batch, one check per story named in the brief, the auth sequence result when it was asked for, and one result per issue: what it checked, what it could not check, and a click-through list for the user. If the report has no check for a story you named, that story is untested; say so in the issue's Results. Anything QA could not check is untested. Never report it as passing, and never fill a gap in QA's report from your own reading of the code.
+
+### If QA reports a failure
+
+A failure is any of these in QA's report: an issue marked `fail`, a regression run with failing tests, or a frontend build that fails. An untested item is not a failure.
+
+Re-spawn the responsible engineer once, with QA's failure report, then run QA once more.
+
+1. Work out who is responsible. For a failed issue it is the engineer for that issue's area; for `Area: both`, the side QA's report points to, or both engineers if it does not say. For a failing existing test it is `backend-engineer`. For a failing frontend build it is `frontend-engineer`.
+2. Leave out any issue that was already retried in 6d. An issue gets one retry per run, so it has failed: it stays `approved`.
+3. Print who you are re-spawning and why, then spawn. The brief is the one from 6b, cut down to the issues involved, plus: that this is a retry after QA and the only one; QA's failure text, word for word; and that the fix belongs in the code, not in the existing tests. For a regression failure QA could not tie to one issue, hand the engineer all of its issues from this batch as the likely cause.
+4. When the retry returns, spawn `qa-engineer` again with the same prompt as before, adding the files the retry changed. This second report replaces the first for step 8.
+
+Whatever the second report says, do not retry again and do not run QA a third time. If it still shows a failure, the issues it fails stay `approved` and the run ends in `REFINE_NEEDED`.
 
 ---
 
@@ -534,7 +628,7 @@ Batch <N>, <today's date>.
 - <one thing for the user to do and what they should see, using the exact on-screen labels>
 ```
 
-For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list.
+For an issue that stays `approved`, write what failed in place of the "Checked by QA" line, in the engineer's or QA's own words, and leave out the click-through list. Start that line with `**Failed:**`, and say that one retry was made and what it reported, so the user reads both attempts. If the issue itself was sound but the regression run failed, say that instead and name the failing tests.
 
 For a spec-first issue, the "Checked by QA" line also names each story the issue added or changed and QA's result for it (`pass`, `fail`, or `untested`). An issue with a story check that failed is not `built`.
 
@@ -564,7 +658,7 @@ The click-through list gathers the items from every built issue, grouped by issu
 
 After the table, add one or two plain sentences: that `built` means the code is in and the automated checks passed but nobody has tried it in the app yet, and, if the server changed and the app is already running, that the server needs a restart before the changes show.
 
-If any issue stayed `approved`, say which and point to its Results section.
+If any issue stayed `approved`, the run ends in `REFINE_NEEDED`. Say so here in one line, carry on with 8d and 8e, and then print the state and its recovery instruction as the last thing of the run, as set out in "When a batch cannot finish".
 
 ### 8d. Suggest a commit
 
