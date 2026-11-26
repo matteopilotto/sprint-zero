@@ -306,7 +306,7 @@ If no request text is left after the build folder and any flags, this run is a r
 
    > Resuming <count> issue(s) left at `approved`: 05 <title> (batch 2), 06 <title> (batch 2). You approved these already, so I am going straight to the build.
 
-3. Skip the rest of step 2 and all of steps 3 and 4. Write no new issue file, do not ask for approval again, and do not change any issue's number, `Batch:` value, or status. Go to step 5. A spec edit that an earlier run already made is not made a second time.
+3. Skip the rest of step 2 and all of steps 3 and 4. Write no new issue file, do not ask for approval again, and do not change any issue's number, `Batch:` value, or status. Go to step 5. The resumed issues are this run's issues sent to build. A spec edit that an earlier run already made is not made a second time.
 
 From there a resume is an ordinary run with two differences. Each engineer's brief in step 6b also says that these issues were attempted before, that the Results section of each says what went wrong, and that part of the change may already be in the code. And wherever a later step prints batch `<N>`, use the `Batch:` value of the resumed issues, naming each batch if they come from more than one.
 
@@ -465,7 +465,9 @@ Then change `Status: proposed` to `Status: approved` in each remaining `proposed
 
 When issues were dropped or are waiting on an answer, add a line saying which: `Dropped: 05.` and `Waiting on your answer: 06.`
 
-From here to the end of the run, only the `approved` issues are worked on. `dropped` and `needs-info` issues are not sent to an engineer or to QA, and their status and Results section stay as they are. In the batch summary of step 8 each one still gets a row, showing its status and "not built".
+From here to the end of the run, only the `approved` issues are worked on. The rest of this file calls them the issues sent to build.
+
+`dropped` and `needs-info` issues are not sent to an engineer or to QA. Their status and Results section stay as they are through step 8, and they never put the run in `REFINE_NEEDED`. In the batch summary of step 8c each one still gets a row, showing its status and "not built".
 
 ---
 
@@ -631,15 +633,17 @@ Whatever the second report says, do not retry again and do not run QA a third ti
 
 ### 8a. Set each issue's status
 
-An issue becomes `built` when all of these are true: every engineer it was sent to returned `done` or `no change needed`, QA's result for the issue is `pass`, and the regression run did not fail. Change its header to `Status: built`.
+This step and 8b cover the issues sent to build (see step 4c). A `dropped` or `needs-info` issue was never built: leave its status and its Results section exactly as they are.
 
-Every other issue of the batch stays `approved`. That covers an issue an engineer failed, an issue QA failed, and, when the regression run failed, every issue of the batch that QA did not clear of the failure.
+An issue sent to build becomes `built` when all of these are true: every engineer it was sent to returned `done` or `no change needed`, QA's result for the issue is `pass`, and the regression run did not fail. Change its header to `Status: built`.
+
+Every other issue sent to build stays `approved`. That covers an issue an engineer failed, an issue QA failed, and, when the regression run failed, every issue of the batch that QA did not clear of the failure.
 
 An issue with untested items can still be `built`. Built means the code is in and the automated checks that could run have passed; the untested items go to the user as a click-through list.
 
 ### 8b. Write the results into each issue
 
-Replace the contents of the Results section in each issue file of the batch. Keep to this shape.
+Replace the contents of the Results section in the file of each issue sent to build. Keep to this shape.
 
 ```markdown
 ## Results
@@ -675,6 +679,7 @@ Regression: <X/Y existing tests passed against a temporary copy | untested: reas
 | -- | ----------------------------- | -------- | ------------------------------------------------- |
 | 04 | <title>                       | built    | <one line; say "untested" where nothing was run>  |
 | 05 | <title>                       | approved | <one line on what failed>                         |
+| 06 | <title>                       | dropped  | not built                                         |
 
 Try these yourself (nothing below was checked automatically):
 
@@ -683,11 +688,13 @@ Issue 04 — <title>
   - <click-through item>
 ```
 
+An issue sent to build shows the status step 8a gave it. A `dropped` or `needs-info` issue shows the status it already had and "not built" in the last column.
+
 The click-through list gathers the items from every built issue, grouped by issue, in issue order. If no issue has any, print "Nothing needs trying by hand." in its place.
 
 After the table, add one or two plain sentences: that `built` means the code is in and the automated checks passed but nobody has tried it in the app yet, and, if the server changed and the app is already running, that the server needs a restart before the changes show.
 
-If any issue stayed `approved`, the run ends in `REFINE_NEEDED`. Say so here in one line and carry on with 8d and 8e. Step 8f then prints the state and its recovery instruction.
+If any issue sent to build is still `approved`, the run ends in `REFINE_NEEDED`. A `dropped` or `needs-info` issue never causes that. Say so here in one line and carry on with 8d and 8e. Step 8f then prints the state and its recovery instruction.
 
 ### 8d. Suggest a commit
 
