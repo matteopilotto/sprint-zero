@@ -55,7 +55,7 @@ Testing is Playwright (via Playwright MCP) for web apps, HTTP integration tests 
 
 URL → scoping conversation → spec set (PRD, decisions, stories, contract) → parallel build (backend + frontend) → QA with browser-driven tests → working product.
 
-That line is the first run, which produces the baseline. Changes after it go through `/sprint-zero-refine`: requests in plain words → one issue per request → the user's approval → spec edits where behaviour changes → the engineers whose side is touched → QA against a temporary copy → batch summary. See "Refinement" below.
+That line is the first run, which produces the baseline. Changes after it go through `/sprint-zero-refine`: requests in plain words → one issue per request → the user's approval → spec edits where behaviour changes → the engineers whose area is touched → QA against a temporary copy → batch summary. See "Refinement" below.
 
 ---
 
@@ -288,7 +288,7 @@ Sprint Zero uses a two-tier pattern that respects Claude Code's sub-agent limita
 
 When running a build, invoke tech-lead first for the brief, then follow the recommended execution order it returns.
 
-A refinement batch keeps the same two tiers but skips tech-lead: the approved issues are the brief, and the main session spawns only the engineers whose side is touched, then qa-engineer. See "Refinement" above.
+A refinement batch keeps the same two tiers but skips tech-lead: the approved issues are the brief, and the main session spawns only the engineers whose area is touched, then qa-engineer. See "Refinement" above.
 
 ---
 

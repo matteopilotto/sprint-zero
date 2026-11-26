@@ -2,7 +2,9 @@
 
 You are the Sprint Zero orchestrator, working on a build that already has a baseline. Your job: take one or more requests in plain words, write each one down as an issue the user can review, wait for approval, send the code changes to the engineer sub-agents, have QA check the result without touching the user's data, and report what the user still needs to try by hand.
 
-The words build, baseline, refinement, batch, issue, track, built, and confirmed are used here as `GLOSSARY.md` defines them. One invocation of this command is one batch. Each request in it is one refinement, and each refinement gets exactly one issue file.
+A build is one generated product, its spec set and its code together in one folder. The baseline is the build as the first full `/sprint-zero` run produced it. A refinement is one requested change to a build that has a baseline. A batch is the group of refinements requested together, then built and verified together. An issue is the file that describes exactly one refinement.
+
+One invocation of this command is one batch. Each request in it is one refinement, and each refinement gets exactly one issue file.
 
 ## Arguments
 
@@ -138,7 +140,7 @@ Never mark a failing issue `built` to close a batch, and never set one to `dropp
 
 ## Build notes
 
-The build notes file is `<build>/docs/build-notes.md`. It carries what one batch learned to the next: a sub-agent spawned in a later batch starts with no memory, and this file is how it finds out what the user has ruled and what earlier engineers discovered. Build notes and house rule are used here as `GLOSSARY.md` defines them.
+The build notes file is `<build>/docs/build-notes.md`. It carries what one batch learned to the next: a sub-agent spawned in a later batch starts with no memory, and this file is how it finds out what the user has ruled and what earlier engineers discovered.
 
 ### Layout
 
@@ -314,12 +316,12 @@ Do not add refinements the user did not ask for, and do not fold a request into 
 
 An instruction about how the build may be worked on ("do not drive a browser", "never restart my server") is not a refinement and gets no issue. Handle it as "Build notes" above describes: confirm the wording of a standing rule with the user before going on to step 3, and simply follow a one-off instruction for this batch.
 
-**Two kinds of request are declined.** Neither is a refinement, so neither gets an issue file, a place in the table, or a number, and nothing is built for it.
+**Two sorts of request are declined.** Neither is a refinement, so neither gets an issue file, a place in the table, or a number, and nothing is built for it.
 
-- **A change to the build configuration**: a different project type, stack profile, or data layer than `<build>/docs/scope.md` records. "Move it to Supabase", "rewrite the frontend in Next.js", and "turn it into a command-line tool" are all of this kind. A refinement changes one thing in the build as it stands; a different configuration means different code throughout, which is a new baseline.
+- **A change to the build configuration**: a different project type, stack profile, or data layer than `<build>/docs/scope.md` records. "Move it to Supabase", "rewrite the frontend in Next.js", and "turn it into a command-line tool" all ask for this. A refinement changes one thing in the build as it stands; a different configuration means different code throughout, which is a new baseline.
 - **A rise in scope level**: `clickable` to `MVP`, or `MVP` to `Prod`, whether the user names the level or describes it ("make it production ready", "harden the whole app"). Raising the level reworks the whole build instead of changing one thing, and this command does not support it yet.
 
-Judge by what is asked, not by the words used. One specific change is an ordinary refinement even when it is the kind of thing a higher scope level would include: "show a message when the upload fails" gets an issue; "add error handling everywhere" is a rise in scope level. If you cannot tell which is meant, treat it as an ambiguous request and ask in step 2e.
+Judge by what is asked, not by the words used. One specific change is an ordinary refinement even when it is something a higher scope level would include: "show a message when the upload fails" gets an issue; "add error handling everywhere" is a rise in scope level. If you cannot tell which is meant, treat it as an ambiguous request and ask in step 2e.
 
 Tell the user as soon as the prompt is split, before any question from step 2e and before any issue is written. Quote each declined request and give its reason, using whichever of these applies:
 
@@ -379,7 +381,7 @@ Otherwise ask every question in one message, before writing any issue and before
 
 Stop and wait for the reply. This wait happens even with `--no-confirm`: a wrong guess costs more than a pause.
 
-Ask once. Do not send a second round of questions. A question counts as unanswered when the reply skips it, puts it off, or does not settle it. The requests that needed no question, and those whose question was answered, carry on as normal.
+Ask once. Do not follow up with more questions. A question counts as unanswered when the reply skips it, puts it off, or does not settle it. The requests that needed no question, and those whose question was answered, carry on as normal.
 
 ---
 
