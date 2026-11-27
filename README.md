@@ -308,7 +308,7 @@ An issue is `built` when the code is in and the automated checks pass. It become
 
 A few things worth knowing:
 
-- If your build has uncommitted changes, the command suggests committing first so you have a restore point. It never commits for you; it prints the commit command at the end instead. If git ignores part of the build, as it does for a build at the root of this repo, the command says so, because a commit cannot restore files git does not track.
+- If your build has uncommitted changes, the command suggests committing first so you have a restore point, and offers to do it. When a batch is built it asks whether to commit it. It commits only when you say yes, or when you have told it to ("commit when it is done" in your request, or a house rule such as "always commit after a batch"); it never pushes. If git ignores part of the build, as it does for a build at the root of this repo, the command says so, because a commit cannot restore files git does not track.
 - If the app is already running, it asks before restarting anything. Pass `--no-launch` to start the app yourself.
 - A standing instruction such as "never open a browser on this build" is saved as a house rule in `docs/build-notes.md` and followed in every later batch.
 - If a change fails twice, the run stops with `REFINE_NEEDED`. Run `/sprint-zero-refine` again with no request to retry what is left.

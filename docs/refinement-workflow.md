@@ -40,14 +40,14 @@ Running the command with no new request resumes any issues left at `approved` by
 
 ## The flow of one batch
 
-1. **Check in.** List issues from earlier batches that are still `built` and ask whether any can be marked `confirmed`. This does not block; the user may ignore it. Then check git: if the build folder has uncommitted changes, say so, recommend committing first, and wait for the user's choice. If the folder is not in a git repository, warn once and continue.
+1. **Check in.** List issues from earlier batches that are still `built` and ask whether any can be marked `confirmed`. This does not block; the user may ignore it. Then check git: if the build folder has uncommitted changes, say so, recommend committing first, offer to make the commit, and wait for the user's choice. If the folder is not in a git repository, warn once and continue.
 2. **Split and clarify.** Break the prompt into individual refinements. If any are ambiguous, ask every clarifying question in one message before going further.
 3. **Write the issues.** Create one file per refinement in the build's `docs/issues/`, with status `proposed`.
 4. **Wait for approval.** Print a table of the issues (number, title, track, area, link) and wait. The user may reply in the chat or edit the files directly. On approval, re-read the files so manual edits count, and mark them `approved`. Issues the user rejects become `dropped`; the file is kept.
 5. **Edit the spec set.** For issues on the spec-first track, update the spec files in place.
 6. **Build.** Spawn the engineers whose side of the build is touched, in parallel when both are.
 7. **Verify.** Spawn `qa-engineer` once for the batch.
-8. **Report.** Mark passing issues `built`, print the batch summary, start or offer to restart the app, and suggest a commit.
+8. **Report.** Mark passing issues `built`, print the batch summary, offer to commit the batch, and start or offer to restart the app.
 
 Nothing in the spec set or the code changes before step 4 completes.
 
@@ -121,7 +121,7 @@ By the time a build is refined, its database may hold data the user cares about.
 
 At the end of a batch the orchestrator checks the build's ports. If nothing is running, it starts the app and opens it, as `/sprint-zero` does, unless `--no-launch` was passed. If something is already listening, it does not stop it; it tells the user that backend changes need a restart and asks before restarting.
 
-The command never commits. It recommends a commit before the batch if there are uncommitted changes, and suggests one when the batch ends.
+By default the command asks before it commits. It offers a commit before the batch if there are uncommitted changes, and again when the batch is built, and commits only on a yes. If the user tells it to commit, in the prompt, in a reply, or as a house rule, it commits without asking and follows their instructions on message and timing. It commits only files inside the build folder and never pushes. (The first version never committed at all; this was changed on 2026-11-27 at the maintainer's request.)
 
 ## What carries over between batches
 
@@ -137,7 +137,7 @@ The record of what was asked and done is the set of issue files. `docs/decisions
 
 ## The batch summary
 
-The command ends by printing one row per issue (number, title, status, what QA checked), followed by the combined click-through list of everything only the user can confirm, and the suggested commit.
+The command ends by printing one row per issue (number, title, status, what QA checked), followed by the combined click-through list of everything only the user can confirm, and the offer to commit.
 
 ## What does not change
 

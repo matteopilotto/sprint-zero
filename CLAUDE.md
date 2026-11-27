@@ -155,7 +155,7 @@ A build is one generated product, its spec set and its code together in one fold
 
 The command works on the build at the repo root unless the first argument names a build folder, such as `examples/loom-clone`. A folder is a build only when it holds `docs/scope.md`; anything else is refused and nothing is written. One invocation is one batch.
 
-Two checks happen before step 1. The command finds the build, and it checks git. If the build folder has uncommitted changes, it recommends a commit and waits for the user's choice. If git ignores parts of the build, it says that a commit is not a restore point for those parts. It never commits, stages, or branches itself. Outside a git repository it warns once and carries on.
+Two checks happen before step 1. The command finds the build, and it checks git. If the build folder has uncommitted changes, it recommends a commit, offers to make it, and waits for the user's choice. If git ignores parts of the build, it says that a commit is not a restore point for those parts. By default it asks before committing and commits only on a yes. When the user has told it to commit, in the prompt, in a reply, or as a house rule, it commits without asking. It commits only files inside the build folder and never pushes; sub-agents make no git writes. Outside a git repository it warns once and carries on.
 
 The eight steps that follow have the same numbers and names as in the command file.
 
@@ -166,7 +166,7 @@ The eight steps that follow have the same numbers and names as in the command fi
 5. **Edit the spec set** for spec-first issues, in place, before any code is written.
 6. **Build.** Only the engineers whose area is touched are spawned, in parallel when both are. The approved issues are the brief.
 7. **Verify.** `qa-engineer` runs once per batch.
-8. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and a suggested commit. The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
+8. **Report.** Each issue's status and Results section are updated, then a batch summary is printed: one row per issue, a click-through list of what only the user can check, and an offer to commit the batch (made without asking when the user has already said to commit). The app is started if its ports are free; if it is already running, nothing is stopped without the user's agreement. `--no-launch` leaves starting it to the user.
 
 The main session is still the only orchestrator. It writes the issue files and edits the spec set itself, but it never edits build code, however small the change. `tech-lead` is not invoked in a refinement, and the four spec-writer commands are not used, because each rewrites its file from scratch.
 

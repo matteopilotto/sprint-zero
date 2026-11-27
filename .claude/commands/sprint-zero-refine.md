@@ -134,7 +134,7 @@ If the problem is still there after the retry, the run does not go on trying. It
 STATE: REFINE_NEEDED — issue(s) <NN, NN> failed again after one retry and are still `approved`. Read the Results section of each to see what failed, then run /sprint-zero-refine <build> with no request to try them again. To change what an issue asks for, edit its file first. To give one up, set its Status line to `dropped` first.
 ```
 
-Step 8f prints it, with the real issue numbers and build folder filled in. 8f is the last sub-step of the run and comes after the batch summary, the suggested commit, and the app step (8c to 8e). Those steps still run: issues that passed are worth committing and trying. No branch of 8e ends the run before the state is printed.
+Step 8f prints it, with the real issue numbers and build folder filled in. 8f is the last sub-step of the run and comes after the batch summary, the commit step, and the app step (8c to 8e). Those steps still run: issues that passed are worth committing and trying. No branch of 8e ends the run before the state is printed.
 
 What a run that ends this way leaves behind:
 
@@ -229,7 +229,19 @@ If `<build>/docs/build-notes.md` exists, read it now. Its house rules apply to y
 
 A refinement changes code the user may not have saved yet. Check for a restore point now, before this command writes anything, so that every uncommitted change you find is the user's own and not this batch's.
 
-This command never commits, stages, stashes, branches, or makes any other git write, at any point in the run, even if the user asks. If the user asks you to commit, give them the commands to run themselves.
+### Committing
+
+By default you do not commit on your own. You ask the user first, at the two points where a commit makes sense: here, when the build has uncommitted changes, and in step 8d, when the batch is built.
+
+If the user tells you to commit, do it without asking. The instruction may come in the prompt ("commit when it is done", "commit my changes first"), in a reply during the run, or as a house rule in the build notes ("always commit after a batch"). It is not a refinement, so it gets no issue. Follow what they said about when, what message, and how to split the commits. An instruction not to commit ("never commit for me") is followed the same way: do not commit and do not ask. `--no-confirm` is not an instruction to commit; it approves the batch and nothing else.
+
+Whoever asked, these limits hold:
+
+- Commit only files inside the build folder. Never stage a file outside it, and never edit `.gitignore` or force-add an ignored file.
+- Commit on the branch the user is on. Do not push, branch, stash, amend, rebase, or reset unless the user asks for exactly that.
+- Only you commit. Say in every engineer and QA brief that they make no git writes.
+
+### The check
 
 Run `git -C <build> rev-parse --is-inside-work-tree`.
 
@@ -251,13 +263,15 @@ If the list is empty, go on to step 1.
 
 If it is not empty, print the changed files (the first ten, then "and <count> more" if the list is longer), followed by:
 
-> The build in `<build>` has uncommitted changes. I recommend committing them first, so you have a restore point if this batch goes wrong. I will not commit for you.
+> The build in `<build>` has uncommitted changes. I recommend committing them first, so you have a restore point if this batch goes wrong.
 >
-> Commit in another terminal and reply "continue", or reply "continue" to go ahead as things are, or "stop" to end here.
+> Reply "commit" and I will commit them for you (you can give a message), "continue" to go ahead as things are, or "stop" to end here.
 
 When parts of the build are ignored, add one line to that message: a commit covers only the files git tracks.
 
-Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. `--no-confirm` does not skip this wait: it approves the batch in advance, not the risk to unsaved work. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
+Then stop and wait for the user's reply. Write nothing and spawn no one while waiting. `--no-confirm` does not skip this wait: it approves the batch in advance, not the risk to unsaved work. On "commit", run `git -C <build> add -- .` and `git -C <build> commit -m "<message>"`, using the user's message or "Save work before refinement batch <N>", print the short hash, and go on to step 1. If the commit fails, print git's message and ask again. On "continue", go on to step 1 whether or not the user committed; the choice is theirs, and you do not ask again in this run. On "stop", end the run without writing anything.
+
+If the user already told you to commit their changes first, in the prompt or in a house rule, make that commit without asking and go on to step 1. If they told you never to commit, leave the "commit" choice out of the message.
 
 ---
 
@@ -723,18 +737,34 @@ After the table, add one or two plain sentences: that `built` means the code is 
 
 If any issue sent to build is still `approved`, the run ends in `REFINE_NEEDED`. A `dropped` or `needs-info` issue never causes that. Say so here in one line and carry on with 8d and 8e. Step 8f then prints the state and its recovery instruction.
 
-### 8d. Suggest a commit
+### 8d. Offer a commit
 
-If at least one issue of the batch is `built`, and the build is in a git repository, end the summary by suggesting a commit. Do not make it yourself. Print the commands for the user to run, with a message that names the batch:
+Leave this step out if no issue of the batch is `built`, or if the git check found no repository.
 
-> To save this state, commit it yourself when you are ready (I do not commit for you):
->
+Otherwise the batch is worth saving. Follow "Committing" in the git check before step 1.
+
+**If the user has already told you to commit** (in the prompt, in a reply during this run, or as a house rule), commit now without asking again, then print one line with the short hash and the message.
+
+**If they have told you not to commit**, do not ask. Print the commands as shown at the end of this step.
+
+**Otherwise, ask:**
+
+> Shall I commit this batch? I would commit the changes inside `<build>` with the message "Refinement batch <N>: <the built issues' titles, shortened>". Reply "commit" (you can give a different message), or "no" to leave it to you.
+
+When the run is ending in `REFINE_NEEDED`, print the state as 8f describes before asking, in the same message, so that it is on screen whether or not the user answers. Do not print it a second time later.
+
+Wait for the reply. On a yes, commit and print the short hash and the message. On a no, or a reply that is not plainly a yes, do not commit, and print the commands so the user can do it later:
+
 > ```bash
-> git add <build>
-> git commit -m "Refinement batch <N>: <the built issues' titles, shortened>"
+> git -C <build> add -- .
+> git -C <build> commit -m "Refinement batch <N>: <the built issues' titles, shortened>"
 > ```
 
-Under the commands, say what the commit will and will not capture, using the list of ignored paths from the git check before step 1.
+**How to commit.** Run `git -C <build> add -- .` and then `git -C <build> commit -m "<message>"`. Use the message above unless the user gave one or asked for something different, such as separate commits for specs and code; then do as they asked. If the commit fails (for example a hook rejects it, or no author is configured), print git's message and the commands, and do not try to work around it.
+
+When issues sent to build are still `approved`, the commit also holds their unfinished code. Say so in one line before asking, or before committing on an earlier instruction, so the user knows what is being saved.
+
+Whether you committed or printed the commands, say what the commit captures, using the list of ignored paths from the git check before step 1.
 
 If nothing was ignored:
 
@@ -744,15 +774,13 @@ If some paths were ignored:
 
 > This captures only what git tracks in the build folder: <for example, the issue files and the build notes>. It does not capture <the ignored paths>, because git ignores them, so the commit is not a restore point for those parts. Copy the build folder if you want one.
 
-If no issue was built, or the git check found no repository, leave this step out.
-
 ### 8e. Start the app, or ask before a restart
 
 The app may be running, and the user may be in the middle of something in it. Never stop a process without the user's agreement, and never run the seed script here: the backend creates and updates its own tables when it starts.
 
 Use the directories, run commands, and ports resolved from `<build>/docs/scope.md` and `.claude/stacks.md` before step 1. Run every command from inside `<build>`. Do not assume the `node-react` values.
 
-Every branch below ends by going to 8f. Two of them ask the user a question first. When the run is ending in `REFINE_NEEDED`, print the state as 8f describes before asking, in the same message, so that it is on screen whether or not the user answers. Do not print it a second time after the answer.
+Every branch below ends by going to 8f. Two of them ask the user a question first. When the run is ending in `REFINE_NEEDED` and 8d has not already printed the state, print it as 8f describes before asking, in the same message, so that it is on screen whether or not the user answers. Do not print it a second time after the answer.
 
 For a `cli-tool` there is nothing to start. Print one example command and go to 8f.
 
@@ -782,7 +810,7 @@ If a part does not come up, say which and print its run command. Do not retry, a
 
 ### 8f. End the run
 
-If any issue sent to build is still `approved`, print the `REFINE_NEEDED` state and its recovery instruction, as set out in "When a batch cannot finish", unless 8e already printed it ahead of a question. It is the last thing the run prints apart from the outcome of such a question.
+If any issue sent to build is still `approved`, print the `REFINE_NEEDED` state and its recovery instruction, as set out in "When a batch cannot finish", unless 8d or 8e already printed it ahead of a question. It is the last thing the run prints apart from the outcome of such a question.
 
 Otherwise there is nothing more to print, and the run ends here.
 
