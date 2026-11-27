@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sprint-zero · architecture</title>
+<style>
+  :root { --ink: #1d1d1b; --muted: #6b6b66; --paper: #fffdf8; --accent: #8a2c1d; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+         font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; line-height: 1.55; }
+  main { max-width: 58rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+  .kicker { font: 600 0.72rem/1 -apple-system, "Helvetica Neue", sans-serif; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--muted); margin: 0 0 0.6rem; }
+  h1 { font-weight: 400; font-size: 2rem; margin: 0 0 1.5rem; }
+  figure { margin: 1.6rem 0; }
+  figcaption { font-size: 0.85rem; color: var(--muted); font-style: italic; margin-top: 0.6rem; }
+  svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+  code { font-size: 0.9em; }
+  h2 { font-weight: 400; font-size: 1.4rem; margin: 3rem 0 0.4rem; }
+  h3 { font: 600 0.72rem/1 -apple-system, "Helvetica Neue", sans-serif; letter-spacing: 0.12em;
+       text-transform: uppercase; color: var(--muted); margin: 2rem 0 0.6rem; }
+  .lede { color: var(--muted); margin: 0 0 1rem; }
+  ol.walk { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+  ol.walk li { counter-increment: step; position: relative; padding: 0.9rem 0 0.9rem 3rem;
+               border-top: 1px solid #e4dfd2; }
+  ol.walk li::before { content: counter(step); position: absolute; left: 0; top: 0.85rem; width: 1.9rem;
+                       font: 600 0.8rem/1.9rem -apple-system, "Helvetica Neue", sans-serif; text-align: center;
+                       border: 1px solid var(--ink); border-radius: 4px; background: #f3f0e8; }
+  ol.walk strong { font-weight: 600; }
+  ol.walk p { margin: 0.2rem 0 0; }
+  .io { font: 0.78rem/1.5 -apple-system, "Helvetica Neue", sans-serif; color: var(--muted); }
+  .io b { font-weight: 600; color: var(--ink); }
+  ul.plain { padding-left: 1.2rem; margin: 0; }
+  ul.plain li { margin: 0.3rem 0; }
+</style>
+</head>
+<body>
+<main>
+<p class="kicker">sprint-zero · as built</p>
+<h1>Architecture</h1>
+
+<figure>
+<svg viewBox="0 0 900 650" width="100%" role="img" aria-label="You drive Sprint Zero from a terminal and, with the --present flag, a browser. The kit is a set of prompt files under .claude: seven slash commands, four sub-agent definitions and the stacks.md catalog. The main Claude Code session is the orchestrator. It runs /sprint-zero as a ten-step pipeline: scope, research, prd, decisions, stories, contract, brief, build, qa, launch. The first six steps run inline and each writes one file into docs; the research step reads the reference over the public web. The brief step spawns the tech-lead sub-agent, the build step spawns backend-engineer and frontend-engineer in the same turn, and the qa step spawns qa-engineer. Sub-agents read docs and stacks.md themselves. backend-engineer writes server, frontend-engineer writes client, the client calls the server over REST, and the server stores data in SQLite or, opt-in, Supabase. qa-engineer drives the client through a browser MCP server. The orchestrator writes .sprint-zero/status.json at every phase transition; the presenter on port 4000 watches it and streams it to the browser.">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f5f8b"/></marker>
+    <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d1d1b"/></marker>
+    <marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d1d1b"/></marker>
+    <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7a4b8c"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#999"/></marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5651d"/></marker>
+  </defs>
+
+  <!-- ===== the kit ===== -->
+  <rect x="150" y="10" width="600" height="46" rx="5" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="450" y="30" font-size="13" text-anchor="middle" font-weight="600">The kit · .claude/ · prompt files, no runtime of its own</text>
+  <text x="450" y="46" font-size="10" text-anchor="middle" fill="#6b6b66">commands/ (7 slash commands) · agents/ (4 sub-agent definitions) · stacks.md, the catalog every agent resolves against</text>
+
+  <!-- kit → orchestrator -->
+  <line x1="250" y1="58" x2="250" y2="194" stroke="#1d1d1b" stroke-width="1.6" marker-end="url(#k)"/>
+  <text x="258" y="120" font-size="9" font-weight="600">command files · read and followed inline</text>
+  <text x="258" y="133" font-size="9" fill="#6b6b66">/sprint-zero chains the six spec commands</text>
+
+  <!-- ===== you ===== -->
+  <rect x="770" y="10" width="116" height="46" rx="4" fill="none" stroke="#1d1d1b"/>
+  <text x="828" y="30" font-size="12" text-anchor="middle">You</text>
+  <text x="828" y="45" font-size="9" text-anchor="middle" fill="#6b6b66">terminal · browser</text>
+  <line x1="800" y1="58" x2="800" y2="98" stroke="#1d1d1b" marker-start="url(#k)" marker-end="url(#k)"/>
+  <text x="794" y="82" font-size="9" text-anchor="end" fill="#6b6b66">browser · HTTP + SSE</text>
+  <line x1="868" y1="58" x2="868" y2="194" stroke="#1d1d1b" marker-start="url(#k)" marker-end="url(#k)"/>
+  <text x="862" y="186" font-size="9" text-anchor="end" fill="#6b6b66">terminal · /sprint-zero &lt;url&gt;</text>
+
+  <!-- ===== outside the orchestrator ===== -->
+  <!-- the reference -->
+  <rect x="20" y="100" width="198" height="66" rx="4" fill="#b5651d" fill-opacity="0.07" stroke="#b5651d"/>
+  <text x="119" y="118" font-size="12" text-anchor="middle" font-weight="600" fill="#b5651d">The reference · public web</text>
+  <text x="119" y="133" font-size="9" text-anchor="middle" fill="#6b6b66">company URL · optional repo URL</text>
+  <text x="119" y="146" font-size="9" text-anchor="middle" fill="#6b6b66">Brave Search MCP or WebSearch + WebFetch</text>
+  <text x="119" y="159" font-size="9" text-anchor="middle" fill="#6b6b66">browser MCP for client-rendered pages</text>
+  <line x1="119" y1="244" x2="119" y2="168" stroke="#b5651d" stroke-width="1.6" marker-start="url(#o)" marker-end="url(#o)"/>
+  <text x="125" y="186" font-size="9" fill="#b5651d">search + fetch</text>
+
+  <!-- status file -->
+  <rect x="470" y="100" width="170" height="66" rx="4" fill="none" stroke="#999"/>
+  <text x="555" y="118" font-size="11" text-anchor="middle" fill="#6b6b66">.sprint-zero/status.json</text>
+  <text x="555" y="133" font-size="9" text-anchor="middle" fill="#999">the run's checkpoint · gitignored</text>
+  <text x="555" y="146" font-size="9" text-anchor="middle" fill="#999">phase · docs · build · qa</text>
+  <text x="555" y="159" font-size="9" text-anchor="middle" fill="#999">appUrl · credentials · failure</text>
+  <line x1="555" y1="194" x2="555" y2="168" stroke="#999" marker-start="url(#g)" marker-end="url(#g)"/>
+  <text x="561" y="186" font-size="9" fill="#999">write each phase · read to resume</text>
+
+  <!-- presenter -->
+  <rect x="690" y="100" width="160" height="66" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="770" y="118" font-size="12" text-anchor="middle">Presenter :4000</text>
+  <text x="770" y="133" font-size="9" text-anchor="middle" fill="#6b6b66">own process · --present only</text>
+  <text x="770" y="146" font-size="9" text-anchor="middle" fill="#6b6b66">Express + chokidar · React UI</text>
+  <text x="770" y="159" font-size="9" text-anchor="middle" fill="#6b6b66">scoping form writes docs/scope.md</text>
+  <line x1="642" y1="133" x2="688" y2="133" stroke="#999" marker-end="url(#g)"/>
+  <text x="665" y="127" font-size="9" text-anchor="middle" fill="#999">watch</text>
+
+  <!-- ===== orchestrator ===== -->
+  <rect x="10" y="196" width="880" height="100" rx="7" fill="none" stroke="#1d1d1b" stroke-width="1.4"/>
+  <text x="877" y="216" font-size="12" text-anchor="end" font-weight="600">Main Claude Code session = ORCHESTRATOR</text>
+  <text x="877" y="230" font-size="9" text-anchor="end" fill="#6b6b66">runs /sprint-zero · spec steps run inline · the only thing that spawns sub-agents</text>
+
+  <!-- pipeline steps (.claude/commands/sprint-zero.md), presenter phases 1–10 -->
+  <rect x="23" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="53" y="259" font-size="10" text-anchor="middle">scope</text>
+  <text x="53" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">Q&amp;A or form</text>
+  <line x1="83" y1="261" x2="88" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="89" y="246" width="60" height="30" rx="4" fill="#b5651d" fill-opacity="0.08" stroke="#b5651d"/>
+  <text x="119" y="259" font-size="10" text-anchor="middle">research</text>
+  <text x="119" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">the reference</text>
+  <line x1="149" y1="261" x2="154" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="155" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="185" y="259" font-size="10" text-anchor="middle">prd</text>
+  <text x="185" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">requirements</text>
+  <line x1="215" y1="261" x2="220" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="221" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="251" y="259" font-size="10" text-anchor="middle">decisions</text>
+  <text x="251" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">scope cuts</text>
+  <line x1="281" y1="261" x2="286" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="287" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="317" y="259" font-size="10" text-anchor="middle">stories</text>
+  <text x="317" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">acceptance</text>
+  <line x1="347" y1="261" x2="352" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="353" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="383" y="259" font-size="10" text-anchor="middle">contract</text>
+  <text x="383" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">the law</text>
+  <line x1="413" y1="261" x2="418" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="419" y="246" width="80" height="30" rx="4" fill="#7a4b8c" fill-opacity="0.1" stroke="#7a4b8c"/>
+  <text x="459" y="259" font-size="10" text-anchor="middle">brief</text>
+  <text x="459" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">spawn tech-lead</text>
+  <line x1="499" y1="261" x2="504" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="505" y="246" width="230" height="30" rx="4" fill="#7a4b8c" fill-opacity="0.1" stroke="#7a4b8c"/>
+  <text x="620" y="259" font-size="10" text-anchor="middle">build</text>
+  <text x="620" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">spawn in one turn · wait for the completion messages</text>
+  <line x1="735" y1="261" x2="740" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="741" y="246" width="70" height="30" rx="4" fill="#7a4b8c" fill-opacity="0.1" stroke="#7a4b8c"/>
+  <text x="776" y="259" font-size="10" text-anchor="middle">qa</text>
+  <text x="776" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">after the build</text>
+  <line x1="811" y1="261" x2="816" y2="261" stroke="#1d1d1b" marker-end="url(#s)"/>
+
+  <rect x="817" y="246" width="60" height="30" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="847" y="259" font-size="10" text-anchor="middle">launch</text>
+  <text x="847" y="271" font-size="8" text-anchor="middle" fill="#6b6b66">seed · start</text>
+
+  <!-- ===== spec steps write docs/ ===== -->
+  <line x1="53" y1="278" x2="53" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <line x1="119" y1="278" x2="119" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <line x1="185" y1="278" x2="185" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <line x1="251" y1="278" x2="251" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <line x1="317" y1="278" x2="317" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <line x1="383" y1="278" x2="383" y2="348" stroke="#999" marker-end="url(#g)"/>
+  <text x="59" y="326" font-size="9" fill="#999">write</text>
+
+  <rect x="14" y="350" width="408" height="60" rx="4" fill="#f3f0e8" stroke="#1d1d1b"/>
+  <text x="53" y="367" font-size="9" text-anchor="middle">scope.md</text>
+  <text x="119" y="381" font-size="9" text-anchor="middle">reference-brief.md</text>
+  <text x="185" y="367" font-size="9" text-anchor="middle">prd.md</text>
+  <text x="251" y="381" font-size="9" text-anchor="middle">decisions.md</text>
+  <text x="317" y="367" font-size="9" text-anchor="middle">user-stories.md</text>
+  <text x="383" y="381" font-size="9" text-anchor="middle">api-contract.md</text>
+  <text x="24" y="402" font-size="11" font-weight="600">docs/ · the spec set</text>
+  <text x="412" y="402" font-size="8" text-anchor="end" fill="#6b6b66">each step reads the earlier files · skipped if its file exists</text>
+
+  <!-- ===== sub-agents ===== -->
+  <line x1="459" y1="278" x2="459" y2="348" stroke="#7a4b8c" stroke-width="2" marker-start="url(#p)" marker-end="url(#p)"/>
+  <line x1="563" y1="278" x2="563" y2="348" stroke="#7a4b8c" stroke-width="2" marker-start="url(#p)" marker-end="url(#p)"/>
+  <line x1="679" y1="278" x2="679" y2="348" stroke="#7a4b8c" stroke-width="2" marker-start="url(#p)" marker-end="url(#p)"/>
+  <line x1="776" y1="278" x2="776" y2="348" stroke="#7a4b8c" stroke-width="2" marker-start="url(#p)" marker-end="url(#p)"/>
+  <text x="569" y="318" font-size="9" font-weight="600" fill="#7a4b8c">↓ prompt · ↑ report</text>
+  <text x="569" y="330" font-size="9" fill="#7a4b8c">isolated context</text>
+
+  <rect x="426" y="350" width="74" height="60" rx="4" fill="#7a4b8c" fill-opacity="0.08" stroke="#7a4b8c"/>
+  <text x="463" y="367" font-size="11" text-anchor="middle" font-weight="600" fill="#7a4b8c">tech-lead</text>
+  <text x="463" y="381" font-size="8" text-anchor="middle" fill="#6b6b66">tools: Read only</text>
+  <text x="463" y="393" font-size="8" text-anchor="middle" fill="#6b6b66">returns the brief</text>
+
+  <rect x="507" y="350" width="112" height="60" rx="4" fill="#7a4b8c" fill-opacity="0.08" stroke="#7a4b8c"/>
+  <text x="563" y="367" font-size="10.5" text-anchor="middle" font-weight="600" fill="#7a4b8c">backend-engineer</text>
+  <text x="563" y="381" font-size="8" text-anchor="middle" fill="#6b6b66">API or CLI · seed script</text>
+  <text x="563" y="393" font-size="8" text-anchor="middle" fill="#6b6b66">builds to the contract</text>
+
+  <rect x="623" y="350" width="112" height="60" rx="4" fill="#7a4b8c" fill-opacity="0.08" stroke="#7a4b8c"/>
+  <text x="679" y="367" font-size="10.5" text-anchor="middle" font-weight="600" fill="#7a4b8c">frontend-engineer</text>
+  <text x="679" y="381" font-size="8" text-anchor="middle" fill="#6b6b66">web-app only</text>
+  <text x="679" y="393" font-size="8" text-anchor="middle" fill="#6b6b66">login · session · screens</text>
+
+  <rect x="741" y="350" width="145" height="60" rx="4" fill="#7a4b8c" fill-opacity="0.08" stroke="#7a4b8c"/>
+  <text x="813" y="367" font-size="11" text-anchor="middle" font-weight="600" fill="#7a4b8c">qa-engineer</text>
+  <text x="813" y="381" font-size="8" text-anchor="middle" fill="#6b6b66">contract checks · API tests</text>
+  <text x="813" y="393" font-size="8" text-anchor="middle" fill="#6b6b66">auth dance + core loop, per scope</text>
+
+  <!-- sub-agents read docs/ themselves -->
+  <polyline points="218,412 218,430 760,430 760,414" fill="none" stroke="#999" stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <line x1="463" y1="430" x2="463" y2="414" stroke="#999" stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <line x1="530" y1="430" x2="530" y2="414" stroke="#999" stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <line x1="650" y1="430" x2="650" y2="414" stroke="#999" stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <text x="226" y="444" font-size="9" fill="#999">read · docs/ and .claude/stacks.md, by relative path</text>
+
+  <!-- ===== the build (default: web-app + node-react + local) ===== -->
+  <line x1="590" y1="412" x2="590" y2="468" stroke="#999" marker-end="url(#g)"/>
+  <text x="584" y="456" font-size="9" text-anchor="end" fill="#999">write</text>
+  <line x1="705" y1="412" x2="705" y2="468" stroke="#999" marker-end="url(#g)"/>
+  <text x="699" y="456" font-size="9" text-anchor="end" fill="#999">write</text>
+
+  <rect x="470" y="470" width="136" height="62" rx="4" fill="#2f6b3a" fill-opacity="0.1" stroke="#2f6b3a"/>
+  <text x="538" y="488" font-size="12" text-anchor="middle">server/ · API :3001</text>
+  <text x="538" y="503" font-size="9" text-anchor="middle" fill="#6b6b66">Express · /auth/* + contract</text>
+  <text x="538" y="516" font-size="9" text-anchor="middle" fill="#6b6b66">seed.js · tests/ added by QA</text>
+  <text x="538" y="527" font-size="8" text-anchor="middle" fill="#6b6b66">python-react: FastAPI :8000</text>
+
+  <rect x="636" y="470" width="116" height="62" rx="4" fill="#2f6b3a" fill-opacity="0.1" stroke="#2f6b3a"/>
+  <text x="694" y="488" font-size="12" text-anchor="middle">client/ · UI :5173</text>
+  <text x="694" y="503" font-size="9" text-anchor="middle" fill="#6b6b66">React + Vite · plain JS</text>
+  <text x="694" y="516" font-size="9" text-anchor="middle" fill="#6b6b66">Bearer token on each call</text>
+  <text x="694" y="527" font-size="8" text-anchor="middle" fill="#6b6b66">nextjs: one app/ on :3000</text>
+
+  <line x1="634" y1="500" x2="608" y2="500" stroke="#1d1d1b" marker-end="url(#k)"/>
+  <text x="621" y="494" font-size="8" text-anchor="middle" fill="#6b6b66">REST</text>
+
+  <!-- browser MCP -->
+  <line x1="832" y1="412" x2="832" y2="468" stroke="#1f5f8b" stroke-width="2.2" marker-start="url(#b)" marker-end="url(#b)"/>
+  <text x="826" y="456" font-size="10" text-anchor="end" fill="#1f5f8b" font-weight="600">MCP</text>
+  <rect x="778" y="470" width="108" height="62" rx="4" fill="#1f5f8b" fill-opacity="0.1" stroke="#1f5f8b"/>
+  <text x="832" y="488" font-size="12" text-anchor="middle">Browser MCP</text>
+  <text x="832" y="503" font-size="9" text-anchor="middle" fill="#6b6b66">playwright or</text>
+  <text x="832" y="516" font-size="9" text-anchor="middle" fill="#6b6b66">brave-devtools</text>
+  <text x="832" y="527" font-size="8" text-anchor="middle" fill="#6b6b66">fallback: tests/e2e.mjs</text>
+  <line x1="776" y1="500" x2="754" y2="500" stroke="#1d1d1b" marker-end="url(#k)"/>
+
+  <!-- data layer -->
+  <line x1="538" y1="534" x2="538" y2="570" stroke="#999" marker-end="url(#g)"/>
+  <text x="546" y="556" font-size="9" fill="#999">SQL · better-sqlite3</text>
+  <rect x="428" y="572" width="220" height="50" rx="4" fill="none" stroke="#999"/>
+  <text x="538" y="589" font-size="12" text-anchor="middle" fill="#6b6b66">SQLite · server/data.db</text>
+  <text x="538" y="603" font-size="9" text-anchor="middle" fill="#999">local: users table · JWT signed by the backend</text>
+  <text x="538" y="615" font-size="9" text-anchor="middle" fill="#999">opt-in: Supabase Postgres + Auth, needs .env</text>
+
+  <!-- ===== build configuration ===== -->
+  <rect x="14" y="458" width="408" height="84" rx="4" fill="none" stroke="#1d1d1b"/>
+  <text x="24" y="476" font-size="11" font-weight="600">Build configuration</text>
+  <text x="134" y="476" font-size="9" fill="#6b6b66">in scope.md · resolved against stacks.md</text>
+  <text x="412" y="476" font-size="8" text-anchor="end" fill="#6b6b66">bold = default</text>
+  <text x="24" y="494" font-size="9" fill="#6b6b66">scope level</text>
+  <text x="104" y="494" font-size="9">clickable · <tspan font-weight="700">MVP</tspan> · Prod</text>
+  <text x="24" y="508" font-size="9" fill="#6b6b66">project type</text>
+  <text x="104" y="508" font-size="9"><tspan font-weight="700">web-app</tspan> · api-service · cli-tool</text>
+  <text x="24" y="522" font-size="9" fill="#6b6b66">stack profile</text>
+  <text x="104" y="522" font-size="9"><tspan font-weight="700">node-react</tspan> · nextjs · python-react</text>
+  <text x="24" y="536" font-size="9" fill="#6b6b66">data layer</text>
+  <text x="104" y="536" font-size="9"><tspan font-weight="700">local</tspan> · supabase</text>
+
+  <!-- legend -->
+  <line x1="24" y1="572" x2="44" y2="572" stroke="#7a4b8c" stroke-width="2"/>
+  <text x="50" y="575" font-size="9" fill="#6b6b66">sub-agent spawn</text>
+  <line x1="150" y1="572" x2="170" y2="572" stroke="#1f5f8b" stroke-width="2.2"/>
+  <text x="176" y="575" font-size="9" fill="#6b6b66">MCP</text>
+  <line x1="24" y1="590" x2="44" y2="590" stroke="#1d1d1b" stroke-width="1.6"/>
+  <text x="50" y="593" font-size="9" fill="#6b6b66">terminal · HTTP · prompt file</text>
+  <line x1="24" y1="608" x2="44" y2="608" stroke="#b5651d" stroke-width="1.6"/>
+  <text x="50" y="611" font-size="9" fill="#6b6b66">web research</text>
+  <line x1="24" y1="626" x2="44" y2="626" stroke="#999"/>
+  <text x="50" y="629" font-size="9" fill="#6b6b66">file write · watch · SQL</text>
+  <line x1="170" y1="626" x2="190" y2="626" stroke="#999" stroke-dasharray="4 3"/>
+  <text x="196" y="629" font-size="9" fill="#6b6b66">file read</text>
+</svg>
+<figcaption>Sprint Zero as built, drawn for the default build (<code>web-app</code> + <code>node-react</code> +
+<code>local</code>). The kit has no runtime of its own: it is seven command files, four sub-agent definitions and one
+stack catalog under <code>.claude/</code>, carried out by a Claude Code session. A run goes left to right along the
+pipeline. The six spec steps run inline in the main session, each following its command file and writing one file
+into <code>docs/</code>; a step whose file already exists is skipped, so a re-run resumes where the last one stopped.
+The next three steps hand off to sub-agents with their own contexts: <code>tech-lead</code> can only read and returns
+a brief, <code>backend-engineer</code> and <code>frontend-engineer</code> are spawned in the same turn, and
+<code>qa-engineer</code> runs once both have returned their exact completion message. Only the main session spawns,
+because a sub-agent cannot spawn another. Each sub-agent is given the scope level, core loop and build configuration
+in its prompt and reads <code>docs/</code> and <code>stacks.md</code> itself; <code>api-contract.md</code> is the
+interface between them, implemented by the backend, consumed by the frontend and checked by QA. The four dials in
+<code>scope.md</code> change the lower half of the drawing: <code>api-service</code> and <code>cli-tool</code> drop
+<code>frontend-engineer</code> and the browser (a CLI is written to <code>cli/</code> and has no server),
+<code>nextjs</code> folds <code>server/</code> and <code>client/</code> into one <code>app/</code> on port 3000,
+<code>supabase</code> replaces SQLite and the backend's own <code>/auth</code> endpoints with hosted Postgres and
+Supabase Auth after a <code>.env</code> preflight, and <code>clickable</code> uses mock data with no auth whatever the
+data layer. The main session overwrites <code>.sprint-zero/status.json</code> at every phase transition, with or
+without <code>--present</code>, and reads it at the start of a run to skip engineers that already finished. With
+<code>--present</code> the presenter runs as its own process, watches that file along with <code>docs/</code>,
+<code>server/</code> and <code>client/</code>, and pushes each change to the browser over SSE; its scoping form writes
+<code>docs/scope.md</code>, which the main session polls for instead of asking in the terminal. A step that fails
+unrecoverably prints a named state (<code>SCOPE_NEEDED</code> through <code>QA_NEEDED</code>), records
+<code>phase: failed</code> and stops. Launch installs dependencies, seeds the data, starts the servers in the
+background and opens the app, unless <code>--no-launch</code> was passed or QA reported it not ready to demo.</figcaption>
+</figure>
+
+<h2>Walkthrough: from inputs to final output</h2>
+<p class="lede">One run of <code>/sprint-zero</code>, in the order it happens. The ten numbered steps are the ten
+boxes along the pipeline in the figure.</p>
+
+<h3>Inputs</h3>
+<ul class="plain">
+  <li><strong>A reference URL</strong>, the product you want something similar to, and optionally a repo URL to
+  reverse-engineer alongside it. If you type <code>/sprint-zero</code> with nothing after it, the session asks for a
+  project name and these URLs first.</li>
+  <li><strong>One scoping reply</strong>, a paragraph answering six questions: build level, core loop, project type,
+  stack, data layer and anything to exclude. Whatever you skip gets the default (<code>MVP</code>,
+  <code>web-app</code>, <code>node-react</code>, <code>local</code>) and is logged as an assumption.</li>
+  <li><strong>Optional flags</strong>: <code>--fresh</code> deletes <code>docs/</code> and regenerates the specs,
+  <code>--rebuild</code> deletes the code directories and rebuilds, <code>--no-launch</code> stops before starting the
+  app, and <code>--present</code> opens the presenter UI and takes the scoping reply from its form.</li>
+</ul>
+
+<h3>Before step 1</h3>
+<p>The main session reads <code>.sprint-zero/status.json</code> if a previous run left one and prints where it is
+resuming from. With <code>--present</code> it also installs, builds and starts the presenter in the background, reads
+the port from <code>.sprint-zero/presenter.json</code> and opens it in the browser.</p>
+
+<h3>The ten steps</h3>
+<ol class="walk">
+  <li><strong>Scope.</strong> The session asks the six-part scoping question once, fills any gap with a default, and
+  writes the answers down. With <code>--present</code> it waits up to 15 minutes for the presenter's form to write the
+  same file instead. If the data layer is <code>supabase</code>, it then checks <code>.env</code> for the four
+  Supabase keys and waits until they are there.
+  <p class="io"><b>Reads</b> the URLs, your reply, <code>stacks.md</code> · <b>Writes</b> <code>docs/scope.md</code>
+  · <b>If it fails</b> <code>SCOPE_NEEDED</code></p></li>
+
+  <li><strong>Research.</strong> The session studies the reference with web search and fetch: what the product does,
+  its features, its pricing tiers, the repo's README and folder layout if a repo was given, and a targeted look at the
+  core loop. It stops rather than invent anything if the site or repo is unreachable.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, the public web · <b>Writes</b>
+  <code>docs/reference-brief.md</code> · <b>If it fails</b> <code>DISCOVERY_NEEDED</code></p></li>
+
+  <li><strong>PRD.</strong> The session describes the product to build, not the reference. The core loop is the spine,
+  excludes become non-goals, and sign up, log in, log out and session persistence are always must-haves for anything
+  with users. The build level sets how demanding the acceptance criteria are.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>reference-brief.md</code> · <b>Writes</b>
+  <code>docs/prd.md</code> · <b>If it fails</b> <code>SPEC_INCOMPLETE</code></p></li>
+
+  <li><strong>Decisions.</strong> The session walks the reference's feature list and records, in plain language, each
+  feature that was simplified, dropped or deliberately excluded, plus the technical choices actually made: stack, data
+  layer, project type and testing approach.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>reference-brief.md</code>, <code>prd.md</code> ·
+  <b>Writes</b> <code>docs/decisions.md</code> · <b>If it fails</b> <code>SPEC_INCOMPLETE</code></p></li>
+
+  <li><strong>User stories.</strong> Every must-have and should-have story is expanded with Given/When/Then acceptance
+  criteria concrete enough for a browser test to verify, a priority and an effort estimate. The auth stories are added
+  if the PRD missed any.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>prd.md</code> · <b>Writes</b>
+  <code>docs/user-stories.md</code> · <b>If it fails</b> <code>SPEC_INCOMPLETE</code></p></li>
+
+  <li><strong>API contract.</strong> The session lists every entity and endpoint the stories need, marks which are
+  protected, and fixes the auth model and base URL from the build configuration. For a <code>cli-tool</code> the
+  contract describes commands, arguments and output instead of HTTP endpoints. From here on this file is law.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>stacks.md</code>, <code>prd.md</code>,
+  <code>user-stories.md</code> · <b>Writes</b> <code>docs/api-contract.md</code> · <b>If it fails</b>
+  <code>SPEC_INCOMPLETE</code></p></li>
+
+  <li><strong>Build brief.</strong> The first hand-off. The session spawns <code>tech-lead</code>, which can only
+  read. It resolves the build configuration against the catalog into concrete directories, ports and run commands,
+  says which engineers to spawn and in what order, and flags any missing or malformed doc. The brief is printed so you
+  can read it before any code is written.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>prd.md</code>, <code>api-contract.md</code>,
+  <code>decisions.md</code>, <code>stacks.md</code> · <b>Returns</b> the build brief (no file) · <b>If it fails</b>
+  <code>BUILD_BRIEF_NEEDED</code></p></li>
+
+  <li><strong>Build.</strong> The session spawns <code>backend-engineer</code> and, for a <code>web-app</code>,
+  <code>frontend-engineer</code> in the same turn. The backend engineer builds the API (or the CLI), the data access,
+  the auth endpoints and a seed script with realistic demo data. The frontend engineer builds login, signup, session
+  handling, protected routes and the product screens. Neither talks to the other; both build to the contract. The
+  session waits for each one's exact completion message and marks it done in the status file.
+  <p class="io"><b>Reads</b> the spec set, <code>stacks.md</code> · <b>Writes</b> <code>server/</code> and
+  <code>client/</code> (or one <code>app/</code>, or <code>cli/</code>) · <b>If it fails</b>
+  <code>BUILD_NEEDED</code></p></li>
+
+  <li><strong>QA.</strong> Once the engineers are done, the session spawns <code>qa-engineer</code> with the resolved
+  ports. For a web app it checks both sides against the contract, runs API integration tests, then drives a real
+  browser through the auth dance (signup, session, logout, login, protected route, 401) and the core loop. An API
+  service gets the API checks only; a CLI is run with sample arguments. <code>Prod</code> adds an error-path test per
+  loop; <code>clickable</code> skips auth and API tests. The session turns the report into the delivery summary.
+  <p class="io"><b>Reads</b> the spec set, the running build · <b>Writes</b> tests under <code>server/tests/</code>
+  · <b>Returns</b> the pass/fail report · <b>If it fails</b> <code>QA_NEEDED</code></p></li>
+
+  <li><strong>Launch.</strong> Unless <code>--no-launch</code> was passed or QA said the build is not ready to demo,
+  the session installs any missing dependencies, runs the seed script and captures the demo login it prints, starts
+  the backend and frontend in the background, checks each answers over HTTP, and opens the app in your browser.
+  <p class="io"><b>Reads</b> <code>scope.md</code>, <code>stacks.md</code> · <b>Writes</b> the seeded database, the
+  final <code>status.json</code> with <code>phase: done</code> · <b>If it fails</b> <code>LAUNCH_FAILED</code> (the
+  build itself still stands)</p></li>
+</ol>
+
+<h3>Final output</h3>
+<ul class="plain">
+  <li><strong>A spec set</strong> of six files in <code>docs/</code>: scope, reference brief, PRD, decisions, user
+  stories and API contract.</li>
+  <li><strong>A working build</strong> in <code>server/</code> and <code>client/</code> for the default configuration,
+  with a seeded SQLite database and QA's tests alongside it.</li>
+  <li><strong>A delivery summary</strong> in the terminal: project, scope level, core loop, pass or fail for backend,
+  frontend and the auth dance, test counts, known issues, and a yes or no on "ready to demo".</li>
+  <li><strong>A running app</strong> opened in your browser, with the backend and frontend URLs, the demo email and
+  password, and the commands to stop the servers. With <code>--present</code> the same result appears in the presenter
+  UI.</li>
+</ul>
+
+<h3>If a run stops partway</h3>
+<p>A step that fails unrecoverably prints its named state with a recovery instruction and stops, so a broken spec
+never reaches the build. Running <code>/sprint-zero</code> again resumes: spec steps whose file exists are skipped,
+engineers already marked done in <code>status.json</code> are not re-spawned, and anything that was still running when
+the session broke is run again.</p>
+</main>
+</body>
+</html>
