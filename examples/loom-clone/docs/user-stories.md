@@ -162,7 +162,7 @@ This story depends on the live camera preview described in story 17, so that pre
 
 **Acceptance criteria:**
 
-- Given a signed-in user with recordings, when they open `/`, then each recording is shown as a row or card with its title, its duration as mm:ss, and its creation date, newest first.
+- Given a signed-in user with recordings, when they open `/` with the "List" view selected (the view selected the first time), then each recording is shown as a row with its title, its duration as mm:ss, and its creation date, newest first. (Changed in refinement batch 5: the library also has a "Grid" view; see story 29.)
 - Given a signed-in user with no recordings, when they open `/`, then the message "No recordings yet." and a "New recording" button are visible.
 - Given two users each with recordings, when one of them opens `/`, then none of the other user's recordings are listed.
 
@@ -188,7 +188,7 @@ This story depends on the live camera preview described in story 17, so that pre
 
 **Acceptance criteria:**
 
-- Given a recording, when the user clicks "Rename", changes the text in the "Title" field, and clicks "Save", then the new title is visible immediately.
+- Given a recording, when the user clicks the "Rename" icon (a pencil), changes the text in the "Title" field, and clicks "Save", then the new title is visible immediately. (Changed in refinement batch 6: "Rename", "Download", and "Delete" are buttons showing only an icon, in the library and on the recording page. Resting the pointer on one shows its name.)
 - Given a recording has been renamed, when the page is reloaded, then the new title is still shown in both the library and the recording page.
 - Given the "Title" field is empty, when the user clicks "Save", then the message "Title can't be empty." is visible and the old title is kept.
 
@@ -201,10 +201,10 @@ This story depends on the live camera preview described in story 17, so that pre
 
 **Acceptance criteria:**
 
-- Given a recording made since refinement batch 4, when the user clicks "Download", then the browser downloads a `.mp4` file whose name is based on the recording's title. (Changed in refinement batch 4: recordings were `.webm` before.)
+- Given a recording made since refinement batch 4, when the user clicks the "Download" icon (a downward arrow), then the browser downloads a `.mp4` file whose name is based on the recording's title. (Changed in refinement batch 4: recordings were `.webm` before.)
 - Given a downloaded `.mp4` file, when it is opened in the browser or in QuickTime, then it plays the same video as the recording page, with sound.
 - Given a downloaded `.mp4` file, when it is inspected, then it holds H.264 video and AAC sound, the combination Google Drive and YouTube accept.
-- Given a recording made before refinement batch 4, when the user clicks "Download", then the browser downloads a `.webm` file as before, and the recording still plays on its page.
+- Given a recording made before refinement batch 4, when the user clicks the "Download" icon, then the browser downloads a `.webm` file as before, and the recording still plays on its page.
 - Given a user anywhere in the app, when they look for a format choice, then there is none: every new recording is saved as MP4 in "Screen only", "Screen + camera", and "Camera only".
 - Given a save has failed after "Stop", when the user clicks "Download instead", then the browser downloads the take as a `.mp4` file.
 - Given a browser that cannot make an MP4, when a recording is stopped, then it is still saved, as a `.webm` file, and is never lost.
@@ -218,8 +218,8 @@ This story depends on the live camera preview described in story 17, so that pre
 
 **Acceptance criteria:**
 
-- Given a recording, when the user clicks "Delete", then a confirmation asks "Delete this recording? This can't be undone." with "Delete" and "Cancel" buttons.
-- Given the confirmation is showing, when the user clicks "Delete", then the recording is no longer listed on `/`, and both its database entry and its video file are removed from the machine.
+- Given a recording, when the user clicks the "Delete" icon (a bin), then a confirmation asks "Delete this recording? This can't be undone." with "Delete" and "Cancel" buttons.
+- Given the confirmation is showing, when the user clicks its "Delete" button, then the recording is no longer listed on `/`, and both its database entry and its video file are removed from the machine.
 - Given the confirmation is showing, when the user clicks "Cancel", then the recording is still listed.
 - Given a recording is deleted from its own page, when the delete completes, then the user lands on `/`.
 
@@ -370,6 +370,34 @@ Known limits: a higher quality makes a larger file and asks more of the computer
 **Priority:** Must-have
 **Effort:** Medium
 
+### Story 29 — Grid view with thumbnails
+
+_Added in refinement batch 5. Card layout and icons changed in refinement batch 6._
+
+**Story:** As a signed-in user, I want to see my library as a grid of thumbnails so that I can recognise a recording by what it shows.
+
+**Acceptance criteria:**
+
+- Given a signed-in user with at least one recording, when they open `/`, then a "View" control with the choices "List" and "Grid" is visible above the recordings, with "List" selected the first time.
+- Given "Grid" is selected, when the library is shown, then the recordings are laid out as cards in columns, newest first, several to a line on a wide window and fewer as the window narrows.
+- Given "Grid" is selected, when a card is shown, then the card has a thin border and rounded corners, and a thumbnail on top: a still picture from the start of that recording, in a 16:9 box that reaches the card's edges, with its top corners rounded with the card.
+- Given a recording whose picture is not 16:9, when its card is shown, then the thumbnail fills the box and is cropped to fit, centred, with no dark bars.
+- Given "Grid" is selected, when a card is shown, then the recording's length is in a small dark badge in the thumbnail's bottom-right corner, worded "45 sec" under a minute, "4 min" from one minute (whole minutes, rounded down), and "1 hr 5 min" from one hour.
+- Given "Grid" is selected, when a card is shown, then under the thumbnail it has, in this order, the recording's age in grey, its title in bold, and on the bottom line the "Rename", "Download", and "Delete" icons.
+- Given "Grid" is selected, when a card is shown, then the age is how long ago the recording was made, in the largest whole unit and without "ago": "just now" under a minute, then for example "5 minutes", "1 hour", "2 days", "3 weeks", "4 months", "3 years". Resting the pointer on it shows the full creation date as the "List" view writes it.
+- Given a recording with a long title, when its card is shown, then the title wraps onto further lines and the card keeps its width.
+- Given "Grid" is selected, when the user clicks a card's thumbnail or its title, then they land on `/recordings/:id`.
+- Given "Grid" is selected, when the user clicks the "Rename" icon on a card, then the "Title" field with "Save" and "Cancel" shows inside that card, and renaming works as in story 14.
+- Given "Grid" is selected, when the user clicks the "Download" or "Delete" icon on a card, then they work as in stories 15 and 16, including the confirmation "Delete this recording? This can't be undone."
+- Given a recording whose thumbnail cannot be loaded, when its card is shown, then a plain dark box takes the thumbnail's place, with the length badge on it, and the rest of the card still works.
+- Given the user last selected "Grid", when they reload `/` or next open it in the same browser, then "Grid" is still selected; the same holds for "List".
+- Given a signed-in user with no recordings, when they open `/`, then "No recordings yet." is visible and the "View" control is not shown.
+
+Known limits: the thumbnail is whatever the recording opens on, so a recording that starts on a blank screen has a blank thumbnail, and the picture cannot be chosen. A recording that is not 16:9 loses its edges in the thumbnail. The card shows a rounded length and an age; the exact duration and date are in the "List" view and on the recording page. The card has no owner, sharing, or counts, because the app has none.
+
+**Priority:** Must-have
+**Effort:** Small
+
 ## Should-have
 
 ### Story 17 — Camera preview
@@ -438,7 +466,7 @@ Known limits: a higher quality makes a larger file and asks more of the computer
 
 - Resize the camera bubble.
 - Ordinary keyboard shortcuts (letter keys) for start, pause, and stop. They would only work while the recorder tab or the floating controls are focused; media keys (story 27) work from anywhere.
-- Thumbnails and search in the library.
+- Search in the library. (Thumbnails were added in refinement batch 5; see story 29.)
 
 ## Edge cases to discuss
 

@@ -270,3 +270,20 @@ One changed behaviour: new recordings are saved as MP4 in place of WebM.
 - **New recordings are MP4.** This reverses the "WebM format" part of the earlier "One quality level, WebM format" cut. MP4 with H.264 video and AAC sound is what Google Drive, YouTube, QuickTime, and phones all accept, which is what the recordings are now used for. There is no format choice: one format keeps the recorder simple. The MP4 is made by the app itself, with nothing to install and nothing sent outside `localhost`, so the reason for the original cut (a heavy dependency) is still respected.
 - **Recordings already in the library are not converted.** They stay WebM, still play, and still download as `.webm`. Converting them was not asked for and would mean rewriting the user's existing files. The cost is a library that can hold both formats, told apart only by the downloaded file's ending.
 - **A browser that cannot make MP4 falls back to WebM.** Losing a take is worse than getting it in the older format, so the recording is saved as WebM without an error. The cost is that the fallback is silent: the user finds out from the `.webm` ending of the download.
+
+## Refinement batch 5
+
+One feature: a grid view with thumbnails in the library.
+
+- **Thumbnails are now in.** This reverses the thumbnails part of the earlier "A flat library" cut, and takes the thumbnails half of "Thumbnails and search in the library" off the "What we'd add next" list. The library gains a "Grid" view next to the list; folders, search, and an archive are still out.
+- **A thumbnail is read from the video, not stored as a picture.** The browser shows a still from the start of each recording, using the video file the server already serves. Nothing changes on the server or in the contract, and recordings made before this batch get a thumbnail too. The costs: the picture is whatever the recording opens on and cannot be chosen, and the grid asks the server for the start of every video on the page, which will get slower as a library grows large.
+- **"List" stays the view shown first.** The grid was asked for as an addition, so the library opens as it always has until the user picks "Grid". The choice is kept in the browser, like the recorder settings, and is not stored on the server.
+
+## Refinement batch 6
+
+Three changes to the library: the "View" choice becomes a drop-down list, "Rename", "Download", and "Delete" become icons, and the grid cards follow a card from Loom's library.
+
+- **"Rename", "Download", and "Delete" are icons without words.** They take far less room, which the grid cards need, and they are the same everywhere the three buttons appear, so the library and the recording page do not disagree. The cost is that an icon is less obvious than a word to someone new; the name shows when the pointer rests on it. The buttons that finish an action ("Save", "Cancel", and the confirmation's "Delete") keep their words.
+- **Thumbnails are now cropped to fill their box.** This reverses the batch 5 choice to fit the picture inside the box with dark bars. It matches the reference card and makes the grid even, at the cost of cutting the edges off a recording that is not 16:9.
+- **The grid shows a rounded length and an age, not the exact figures.** A card reads "4 min" and "3 years" as the reference does. The exact duration and creation date stay in the "List" view and on the recording page, and the full date shows when the pointer rests on the age.
+- **The reference card's owner, sharing, and counts are left out.** Its avatar and name, "Share to Spaces", and the view, comment, and reaction counts have nothing behind them here: the scope excludes sharing, comments, reactions, and view analytics, and every recording in a library belongs to the person looking at it. The three icons take the bottom line where the counts are.

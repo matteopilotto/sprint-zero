@@ -50,6 +50,9 @@ p { margin: 0.5rem 0; }
 .button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .button.large { padding: 0.7rem 1.4rem; font-size: 1rem; }
 .button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* A button that shows only an icon (rename, download, delete). */
+.button.icon-button { display: inline-flex; align-items: center; justify-content: center; padding: 0.45rem; }
+.icon-button svg { display: block; }
 
 input[type='text'], input[type='email'], input[type='password'], select {
   font: inherit;
@@ -91,6 +94,21 @@ input[type='text'], input[type='email'], input[type='password'], select {
 .rename-form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .rename-form label { font-size: 0.9rem; font-weight: 600; }
 .rename-form .error { flex-basis: 100%; }
+
+/* Library: the "View" control and the "Grid" view */
+.view-control { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+.view-control label { font-weight: 600; font-size: 0.9rem; }
+.recording-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; align-items: start; }
+.recording-card { display: flex; flex-direction: column; min-width: 0; padding: 0; }
+/* The thumbnail reaches the card's edges: its top corners follow the card's
+   (12px less the 1px border) and its bottom edge is straight. */
+.thumbnail { position: relative; display: block; aspect-ratio: 16 / 9; background: #111; border-radius: 11px 11px 0 0; overflow: hidden; }
+.thumbnail video { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none; }
+.thumbnail-badge { position: absolute; right: 0.5rem; bottom: 0.5rem; padding: 0.1rem 0.45rem; border-radius: 6px; background: rgba(17, 17, 17, 0.85); color: #fff; font-size: 0.78rem; font-weight: 600; line-height: 1.4; }
+.recording-card-body { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; min-width: 0; padding: 0.85rem 1rem 1rem; }
+.recording-card-body .row-actions, .recording-card-body .rename-form { margin-top: 0.35rem; }
+.recording-card-body .rename-form { align-self: stretch; }
+.recording-card .rename-form input { flex: 1 1 100%; min-width: 0; }
 
 /* Recording page */
 .player { display: block; width: 100%; max-height: 70vh; background: #000; border-radius: 12px; margin: 1rem 0; }

@@ -29,7 +29,7 @@ Also out of scope at this level, although Loom offers them:
 - Cloud storage, share links, embedding, and privacy settings. Nothing is uploaded anywhere.
 - Custom capture areas. (Computer audio was added in refinement batch 2; see user story 25. A choice of video quality was added in refinement batch 3; see user story 28.)
 - Drawing tools, mouse highlighting, and blurring parts of the screen.
-- Folders, search, thumbnails, and archiving in the library.
+- Folders, search, and archiving in the library. (Thumbnails were added in refinement batch 5; see user story 29.)
 - Letter-key shortcuts that work from other applications. (Floating controls and media key shortcuts were added in refinement batch 2; see user stories 26 and 27.)
 - Mobile support and integrations with other tools.
 
@@ -93,7 +93,7 @@ Acceptance criteria for stories 22 to 24 are in `docs/user-stories.md`.
 
 - As a user, I want to resize the camera bubble so that it suits what I'm presenting.
 - As a user, I want keyboard shortcuts for start, pause, and stop so that I don't have to click.
-- As a user, I want thumbnails and search in my library so that I can find a recording quickly.
+- As a user, I want search in my library so that I can find a recording quickly. (Thumbnails were added in refinement batch 5; see user story 29.)
 - As a user, I want to download recordings as MP4 so that they play in every video player.
 
 ## 6. Acceptance criteria
