@@ -1,6 +1,6 @@
 # 12: Grid view with thumbnails in the library
 
-Status: built
+Status: confirmed
 Batch: 5
 Track: spec first
 Area: client
@@ -55,3 +55,5 @@ Batch 5, 2026-11-27.
 - With "Grid" selected, reload the page. "Grid" should still be selected. Select "List" and reload: "List" should still be selected.
 - Sign up with a new account and open `/`. You should see "No recordings yet." and no "View" control.
 - Optional: a recording whose file is missing from `server/recordings/` should show a plain dark box with its buttons still working. Do not remove a file you want to keep to test this.
+
+**Confirmed:** by the user, 2026-11-27.

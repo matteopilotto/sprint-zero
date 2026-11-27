@@ -1,6 +1,6 @@
 # 07: Pause, stop, or cancel without going back to the recorder tab
 
-Status: built
+Status: confirmed
 Batch: 2
 Track: spec first
 Area: client
@@ -62,3 +62,5 @@ After the entire-screen fix:
 
 - Share the entire screen: the floating window closes during the countdown, the notice "Floating controls are closed because you are sharing your entire screen…" shows, and the saved video has no floating window.
 - Share a tab or a window: the floating window stays open and is not in the video.
+
+**Confirmed:** by the user, 2026-11-27.

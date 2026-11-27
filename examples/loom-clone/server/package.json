@@ -1,8 +1,8 @@
 {
-  "name": "loom-clone-server",
+  "name": "looky-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Local API for the Loom clone: accounts, recording details in SQLite, video files on disk.",
+  "description": "Local API for Looky: accounts, recording details in SQLite, video files on disk.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

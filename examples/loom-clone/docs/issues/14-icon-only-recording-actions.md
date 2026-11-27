@@ -1,6 +1,6 @@
 # 14: Icons only for rename, download, and delete
 
-Status: built
+Status: confirmed
 Batch: 6
 Track: spec first
 Area: client
@@ -45,3 +45,5 @@ Batch 6, 2026-11-27.
 - Click the downward arrow: the recording downloads.
 - Click the bin: "Delete this recording? This can't be undone." with "Delete" and "Cancel". Click "Cancel": the recording is still there.
 - "New recording" on `/` and the buttons on `/record` still have their words.
+
+**Confirmed:** by the user, 2026-11-27.

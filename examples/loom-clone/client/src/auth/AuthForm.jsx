@@ -28,7 +28,7 @@ export default function AuthForm({ heading, action, submitLabel, submitTestId, f
 
   return (
     <main className="auth-page">
-      <p className="wordmark">Loom clone</p>
+      <p className="wordmark">Looky</p>
       <form className="card auth-card" onSubmit={handleSubmit}>
         <h1>{heading}</h1>
         <label htmlFor="email">Email</label>

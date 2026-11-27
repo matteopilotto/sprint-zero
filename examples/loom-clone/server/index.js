@@ -1,4 +1,4 @@
-// Loom clone API. Run with `node index.js`; listens on http://localhost:3001.
+// Looky API. Run with `node index.js`; listens on http://localhost:3001.
 // Request URLs are deliberately never logged: file links carry the login token.
 const express = require('express');
 const cors = require('cors');
@@ -39,5 +39,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Loom clone API listening on http://localhost:${PORT}`);
+  console.log(`Looky API listening on http://localhost:${PORT}`);
 });

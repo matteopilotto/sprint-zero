@@ -1,6 +1,6 @@
 # 09: Better recording quality, with a choice of resolution
 
-Status: built
+Status: confirmed
 Batch: 3
 Track: spec first
 Area: client
@@ -52,3 +52,5 @@ Batch 3, 2026-11-26.
 - Record a minute or two at "Original" on the largest screen available and check playback is smooth, with no stutter. If it stutters, say so: the encoder may need a lower ceiling.
 - Seeking and download still work on a new "1080p" recording (the file is now VP9).
 - The chosen quality is still selected after reloading `/record`.
+
+**Confirmed:** by the user, 2026-11-27.

@@ -1,6 +1,6 @@
 # 04: "still recording" text is cut off in the round bubble
 
-Status: built
+Status: confirmed
 Batch: 2
 Track: straight to code
 Area: client
@@ -37,3 +37,5 @@ Batch 2, 2026-11-26.
 
 - "Screen + camera", "Hide", start a recording: the round view reads "Camera hidden" with "still recording" on a second line, nothing clipped.
 - Same in "Camera only" at "Small", "Medium", and "Large".
+
+**Confirmed:** by the user, 2026-11-27.

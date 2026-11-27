@@ -1,6 +1,6 @@
 # 06: Record the audio the computer is playing
 
-Status: built
+Status: confirmed
 Batch: 2
 Track: spec first
 Area: client
@@ -43,3 +43,5 @@ Batch 2, 2026-11-26.
 - Share a single window: the notice "Computer audio isn't being recorded…" shows and the recording still works.
 - With speakers (not headphones) and the microphone on, check the played sound is not doubled or echoing.
 - The toggle is still on after reloading `/record`.
+
+**Confirmed:** by the user, 2026-11-27.

@@ -1,6 +1,6 @@
 # 15: Grid cards laid out like the Loom screenshot
 
-Status: built
+Status: confirmed
 Batch: 6
 Track: spec first
 Area: client
@@ -55,3 +55,5 @@ Batch 6, 2026-11-27.
 - Click a thumbnail, then go back and click a title: each opens that recording's page.
 - There should be no avatar, owner name, "Share to Spaces", or counts on the card.
 - Switch to "List" and open a recording's page: both still show the duration as mm:ss (like "00:05") and the full date.
+
+**Confirmed:** by the user, 2026-11-27.

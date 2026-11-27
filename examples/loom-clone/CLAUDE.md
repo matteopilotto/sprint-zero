@@ -1,4 +1,4 @@
-# Loom clone — notes for Claude Code
+# Looky — notes for Claude Code
 
 This folder is a Sprint Zero build with three refinement batches on top of its baseline. It is a local-first screen recorder that runs in the browser: the browser captures and encodes the video, and a small local server stores and serves the files.
 

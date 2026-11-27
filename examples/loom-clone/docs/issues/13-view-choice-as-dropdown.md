@@ -1,6 +1,6 @@
 # 13: "View" choice as a drop-down list
 
-Status: built
+Status: confirmed
 Batch: 6
 Track: straight to code
 Area: client
@@ -35,3 +35,5 @@ Batch 6, 2026-11-27.
 - Open `/` with at least one recording. You should see a drop-down list labelled "View" and no round buttons. Open it: "List" then "Grid".
 - Choose "Grid": the library switches to cards at once. Reload: the drop-down still shows "Grid". Choose "List" and reload: it shows "List".
 - With an account that has no recordings, you should see "No recordings yet." and no "View" drop-down.
+
+**Confirmed:** by the user, 2026-11-27.

@@ -1,6 +1,6 @@
 # 03: Option to hide or dim the camera
 
-Status: built
+Status: confirmed
 Batch: 1
 Track: spec first
 Area: client
@@ -51,3 +51,5 @@ Batch 1, 2026-11-26.
 - Least certain: a hidden view while the recorder tab is in the background. Record with "Hide" on, switch tabs, and check the saved video.
 - The round placeholder text may look cramped in "Screen + camera".
 - "Dim" is still selected after reloading `/record`.
+
+**Confirmed:** by the user, 2026-11-27.

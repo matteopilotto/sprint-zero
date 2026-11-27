@@ -15,7 +15,7 @@ export default function Layout({ children }) {
     <>
       <header className="app-header">
         <Link to="/" className="wordmark">
-          Loom clone
+          Looky
         </Link>
         <div className="header-right">
           {user && <span className="muted">{user.email}</span>}

@@ -1,6 +1,6 @@
 # 05: Recording starts while the countdown still shows 1
 
-Status: built
+Status: confirmed
 Batch: 2
 Track: straight to code
 Area: client
@@ -39,3 +39,5 @@ Batch 2, 2026-11-26.
 - Record the entire screen (or the recorder tab itself) with the recorder page visible. Play the video: the first frame shows the timer, never the countdown "1".
 - The countdown still shows 3, 2, 1 one second apart, and the timer starts at 00:00.
 - If the "1" still appears in the video, say so: the delay can be lengthened, or the cause is something else.
+
+**Confirmed:** by the user, 2026-11-27.

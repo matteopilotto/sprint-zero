@@ -1,4 +1,4 @@
-# Loom clone — PRD
+# Looky — PRD
 
 _Built with Sprint Zero. Reference: Loom. Level: MVP._
 

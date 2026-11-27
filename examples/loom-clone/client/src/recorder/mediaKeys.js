@@ -49,7 +49,7 @@ export function createMediaKeys({ onPauseResume, onStop }) {
     }
   }
   for (const [action, handler] of Object.entries(handlers)) set(action, handler)
-  if (window.MediaMetadata) session.metadata = new MediaMetadata({ title: 'Recording in progress', artist: 'Loom clone' })
+  if (window.MediaMetadata) session.metadata = new MediaMetadata({ title: 'Recording in progress', artist: 'Looky' })
 
   return {
     dispose() {

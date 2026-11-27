@@ -1,6 +1,6 @@
-# Loom clone — server
+# Looky — server
 
-The local API for the Loom clone. It keeps accounts and recording details in a SQLite file (`data.db`) and saves each video as a file in `recordings/`. The browser does all the recording; this server only stores and serves the results. Nothing leaves your machine.
+The local API for Looky. It keeps accounts and recording details in a SQLite file (`data.db`) and saves each video as a file in `recordings/`. The browser does all the recording; this server only stores and serves the results. Nothing leaves your machine.
 
 **No account, no keys, and no `.env` file are needed.**
 
