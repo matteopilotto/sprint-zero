@@ -157,6 +157,27 @@ async function main() {
   check('upload with a plain video/webm type and blank title also gets video/webm and the default title', r.status === 201 && r.data.recording.mime_type === 'video/webm' && r.data.recording.title.startsWith('Recording — '));
   const blankTitleId = r.status === 201 ? r.data.recording.id : null;
 
+  // ---- MP4 upload (what the recorder sends since refinement batch 4), removed again at the end of this block
+  const MP4_BYTES = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom', 'latin1'), Buffer.alloc(1012, 7)]);
+  const mp4Form = new FormData();
+  mp4Form.append('file', new Blob([MP4_BYTES], { type: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2' }), 'recording.mp4');
+  mp4Form.append('mode', 'screen_camera');
+  mp4Form.append('duration_seconds', '7');
+  mp4Form.append('title', 'Demo: pricing page');
+  r = await call('POST', '/recordings', { token: tokenA, form: mp4Form });
+  const mp4 = r.data && r.data.recording;
+  const mp4Path = mp4 ? path.join(RECORDINGS_DIR, `${mp4.id}.mp4`) : '';
+  check('MP4 upload returns 201 with mime_type video/mp4 (codec parameters removed)', r.status === 201 && mp4 && mp4.mime_type === 'video/mp4' && mp4.size_bytes === MP4_BYTES.length, mp4 && `mime_type=${mp4.mime_type}`);
+  check('MP4 upload writes server/recordings/<id>.mp4 with identical bytes and no <id>.webm', mp4 && fs.existsSync(mp4Path) && fs.readFileSync(mp4Path).equals(MP4_BYTES) && !fs.existsSync(path.join(RECORDINGS_DIR, `${mp4.id}.webm`)));
+  r = await call('GET', `/recordings/${mp4 && mp4.id}/file`, { token: tokenA, raw: true });
+  check('MP4 file is served with Content-Type video/mp4 and the exact bytes', r.status === 200 && r.headers.get('content-type') === 'video/mp4' && r.buffer.equals(MP4_BYTES), `content-type=${r.headers.get('content-type')}`);
+  r = await call('GET', `/recordings/${mp4 && mp4.id}/file`, { token: tokenA, headers: { Range: 'bytes=0-99' }, raw: true });
+  check('MP4 file supports Range requests (206)', r.status === 206 && r.buffer.equals(MP4_BYTES.subarray(0, 100)));
+  r = await call('GET', `/recordings/${mp4 && mp4.id}/file?download=1`, { token: tokenA, raw: true });
+  check('MP4 download filename is "<title with unsafe chars as ->.mp4"', /filename="Demo- pricing page\.mp4"/.test(r.headers.get('content-disposition') || ''), `content-disposition=${r.headers.get('content-disposition')}`);
+  r = await call('DELETE', `/recordings/${mp4 && mp4.id}`, { token: tokenA });
+  check('deleting an MP4 recording returns 204 and removes <id>.mp4 from disk', r.status === 204 && mp4 && !fs.existsSync(mp4Path));
+
   // ---- invalid uploads leave nothing on disk
   const afterGood = filesOnDisk();
   const badUploads = [
@@ -342,7 +363,7 @@ async function main() {
   check('CORS preflight allows http://localhost:5173 with Authorization and PUT', r.headers.get('access-control-allow-origin') === 'http://localhost:5173' && /PUT/.test(r.headers.get('access-control-allow-methods') || '') && /authorization/i.test(r.headers.get('access-control-allow-headers') || ''));
 
   // ---- nothing private in any JSON body seen during the run
-  const leaks = bodiesSeen.filter((b) => /user_id|password_hash|password"|server\/recordings|\/Users\/|recordings\/[0-9a-f-]{36}\.webm|data\.db/.test(b));
+  const leaks = bodiesSeen.filter((b) => /user_id|password_hash|password"|server\/recordings|\/Users\/|recordings\/[0-9a-f-]{36}\.(webm|mp4)|data\.db/.test(b));
   last = null;
   check(`no JSON body (${bodiesSeen.length} checked) contains user_id, password_hash, or a disk path`, leaks.length === 0, leaks.slice(0, 2).join(' || '));
 

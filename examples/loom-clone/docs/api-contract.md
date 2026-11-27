@@ -27,7 +27,7 @@ The backend allows cross-origin requests from the frontend at `http://localhost:
   - `mode` — `"screen"`, `"screen_camera"`, or `"camera"` (camera only, full frame).
   - `duration_seconds` — integer, the recorder's own elapsed time excluding pauses.
   - `size_bytes` — integer, size of the video file.
-  - `mime_type` — string, for example `"video/webm"`.
+  - `mime_type` — string. `"video/mp4"` for recordings made since refinement batch 4, `"video/webm"` for older ones (and for a recording from a browser that cannot make MP4).
   - `created_at`, `updated_at` — ISO 8601 strings.
 
 The camera background, microphone setting, computer audio setting, video quality setting, floating controls setting, media key shortcuts setting, bubble position, mirror setting, and camera view (show, dim, hide, and its size) are recorder settings that live only in the browser. They are not stored and have no endpoints.
@@ -160,7 +160,7 @@ The camera background, microphone setting, computer audio setting, video quality
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `file` | file | yes | The recorded video. Sent with a filename such as `recording.webm` and a `video/webm` content type. |
+| `file` | file | yes | The recorded video. Sent with the filename `recording.mp4` and a `video/mp4` content type. A WebM upload (`recording.webm`, `video/webm`) is still accepted, for a browser that cannot make MP4. |
 | `mode` | text | yes | `screen`, `screen_camera`, or `camera`. |
 | `duration_seconds` | text | yes | Whole number of seconds, `0` or more, from the recorder's timer. |
 | `title` | text | no | 1 to 200 characters. If omitted or blank, the server sets `"Recording — <D MMM YYYY, HH:mm>"` using the server's local time. |
@@ -175,14 +175,14 @@ The camera background, microphone setting, computer audio setting, video quality
     "mode": "screen",
     "duration_seconds": 42,
     "size_bytes": 3984112,
-    "mime_type": "video/webm",
+    "mime_type": "video/mp4",
     "created_at": "2026-11-26T14:32:51Z",
     "updated_at": "2026-11-26T14:32:51Z"
   }
 }
 ```
 
-**Notes:** The file is stored as `server/recordings/<id>.webm`; the folder is created on server start if missing and is gitignored. `size_bytes` is measured by the server. `mime_type` is the uploaded file's content type with any codec parameters removed (`video/webm;codecs=vp9,opus` is stored as `video/webm`). Maximum upload size is 2 GB. Returns `400 invalid_input` if `file` is missing or empty, `mode` is not one of the three values, or `duration_seconds` is not a whole number of 0 or more; in that case no file is left on disk. Returns `413 file_too_large` above the size limit.
+**Notes:** The file is stored as `server/recordings/<id>.mp4` when its type is `video/mp4` and as `server/recordings/<id>.webm` when it is `video/webm`; the folder is created on server start if missing and is gitignored. Files saved before refinement batch 4 are all `<id>.webm` and stay where they are. `size_bytes` is measured by the server. `mime_type` is the uploaded file's content type with any codec parameters removed (`video/mp4;codecs=avc1.42E01E,mp4a.40.2` is stored as `video/mp4`, `video/webm;codecs=vp9,opus` as `video/webm`). Maximum upload size is 2 GB. Returns `400 invalid_input` if `file` is missing or empty, `mode` is not one of the three values, or `duration_seconds` is not a whole number of 0 or more; in that case no file is left on disk. Returns `413 file_too_large` above the size limit.
 
 ### PUT /recordings/:id
 
@@ -204,7 +204,7 @@ The camera background, microphone setting, computer audio setting, video quality
     "mode": "screen",
     "duration_seconds": 42,
     "size_bytes": 3984112,
-    "mime_type": "video/webm",
+    "mime_type": "video/mp4",
     "created_at": "2026-11-26T14:32:51Z",
     "updated_at": "2026-11-26T14:40:03Z"
   }
@@ -231,11 +231,11 @@ The camera background, microphone setting, computer audio setting, video quality
 | Parameter | Notes |
 |-----------|-------|
 | `token` | The access token, for use in `<video src>` and download links. |
-| `download` | If `1`, the response adds a `Content-Disposition: attachment` header naming the file `<title>.webm` so the browser saves the file. Titles can contain non-ASCII characters (the default title has an em dash), so the header carries an ASCII fallback in `filename=` plus the real name in `filename*=UTF-8''...` (Express `res.attachment()` does this). |
+| `download` | If `1`, the response adds a `Content-Disposition: attachment` header naming the file `<title>.mp4` or `<title>.webm`, to match the recording's `mime_type`, so the browser saves the file. Titles can contain non-ASCII characters (the default title has an em dash), so the header carries an ASCII fallback in `filename=` plus the real name in `filename*=UTF-8''...` (Express `res.attachment()` does this). |
 
 **Response:** `200 OK` (or `206 Partial Content` for range requests) with the raw video bytes. `Content-Type` is the recording's `mime_type`. This is the one endpoint whose success response is not JSON.
 
-**Notes:** Must support HTTP `Range` requests so the player can seek. For `download=1`, the filename is the recording's title with characters that are unsafe in filenames (`/ \ : * ? " < > |`) replaced by `-`, followed by `.webm`. Errors are JSON as usual: `401 unauthorized` for a missing or invalid token, `404 not_found` if the recording does not exist, belongs to another user, or its file is missing from disk.
+**Notes:** Must support HTTP `Range` requests so the player can seek. For `download=1`, the filename is the recording's title with characters that are unsafe in filenames (`/ \ : * ? " < > |`) replaced by `-`, followed by `.mp4` for a `video/mp4` recording and `.webm` for a `video/webm` one. Errors are JSON as usual: `401 unauthorized` for a missing or invalid token, `404 not_found` if the recording does not exist, belongs to another user, or its file is missing from disk.
 
 Example URLs the client builds:
 

@@ -2,6 +2,7 @@
 // Endpoints, field names and shapes follow docs/api-contract.md exactly.
 import { useMemo } from 'react'
 import { useSession } from '../auth/SessionProvider.jsx'
+import { fileNameFor } from '../recorder/toMp4.js'
 
 export const API_BASE_URL = 'http://localhost:3001'
 
@@ -79,7 +80,8 @@ export function useApi() {
       deleteRecording: (id) => request(`/recordings/${id}`, { method: 'DELETE', token }),
       createRecording: ({ blob, mode, durationSeconds }) => {
         const form = new FormData()
-        form.append('file', blob, 'recording.webm')
+        // "recording.mp4", or "recording.webm" from a browser that cannot make MP4.
+        form.append('file', blob, fileNameFor(blob))
         form.append('mode', mode)
         form.append('duration_seconds', String(durationSeconds))
         // No title: the server sets the default "Recording — <date>" title.

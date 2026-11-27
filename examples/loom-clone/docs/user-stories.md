@@ -201,8 +201,13 @@ This story depends on the live camera preview described in story 17, so that pre
 
 **Acceptance criteria:**
 
-- Given a recording, when the user clicks "Download", then the browser downloads a `.webm` file whose name is based on the recording's title.
-- Given a downloaded file, when it is opened in Chrome, then it plays the same video as the recording page.
+- Given a recording made since refinement batch 4, when the user clicks "Download", then the browser downloads a `.mp4` file whose name is based on the recording's title. (Changed in refinement batch 4: recordings were `.webm` before.)
+- Given a downloaded `.mp4` file, when it is opened in the browser or in QuickTime, then it plays the same video as the recording page, with sound.
+- Given a downloaded `.mp4` file, when it is inspected, then it holds H.264 video and AAC sound, the combination Google Drive and YouTube accept.
+- Given a recording made before refinement batch 4, when the user clicks "Download", then the browser downloads a `.webm` file as before, and the recording still plays on its page.
+- Given a user anywhere in the app, when they look for a format choice, then there is none: every new recording is saved as MP4 in "Screen only", "Screen + camera", and "Camera only".
+- Given a save has failed after "Stop", when the user clicks "Download instead", then the browser downloads the take as a `.mp4` file.
+- Given a browser that cannot make an MP4, when a recording is stopped, then it is still saved, as a `.webm` file, and is never lost.
 
 **Priority:** Must-have
 **Effort:** Small
@@ -434,7 +439,6 @@ Known limits: a higher quality makes a larger file and asks more of the computer
 - Resize the camera bubble.
 - Ordinary keyboard shortcuts (letter keys) for start, pause, and stop. They would only work while the recorder tab or the floating controls are focused; media keys (story 27) work from anywhere.
 - Thumbnails and search in the library.
-- Download recordings as MP4.
 
 ## Edge cases to discuss
 

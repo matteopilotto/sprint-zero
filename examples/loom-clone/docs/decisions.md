@@ -112,7 +112,7 @@ We built a screen recorder that runs in the browser and keeps every recording on
 
 ### One quality level, WebM format
 
-_The "one quality level" part was reversed in refinement batch 3: see "Refinement batch 3" below. WebM stays._
+_The "one quality level" part was reversed in refinement batch 3: see "Refinement batch 3" below. The WebM part was reversed in refinement batch 4: see "Refinement batch 4" below._
 
 - **Reference does:** Records at 720p on the free plan and up to 4K on paid plans, and delivers widely playable video.
 - **We chose to:** Record at whatever resolution the browser captures and save it as a WebM file.
@@ -262,3 +262,11 @@ One feature: better recording quality, with a choice of resolution.
 - **Switching between "Screen + camera" and "Camera only", or changing the quality in "Camera only", restarts the camera for a moment**, because it has to be reopened at a different size. The size is fixed once a recording starts.
 - **The quality is not stored with the recording.** It is a recorder setting kept in the browser, like the others, so the server and the contract are unchanged.
 - **Still 30 frames a second.** A higher frame rate was not asked for and would double the work of drawing the bubble.
+
+## Refinement batch 4
+
+One changed behaviour: new recordings are saved as MP4 in place of WebM.
+
+- **New recordings are MP4.** This reverses the "WebM format" part of the earlier "One quality level, WebM format" cut. MP4 with H.264 video and AAC sound is what Google Drive, YouTube, QuickTime, and phones all accept, which is what the recordings are now used for. There is no format choice: one format keeps the recorder simple. The MP4 is made by the app itself, with nothing to install and nothing sent outside `localhost`, so the reason for the original cut (a heavy dependency) is still respected.
+- **Recordings already in the library are not converted.** They stay WebM, still play, and still download as `.webm`. Converting them was not asked for and would mean rewriting the user's existing files. The cost is a library that can hold both formats, told apart only by the downloaded file's ending.
+- **A browser that cannot make MP4 falls back to WebM.** Losing a take is worse than getting it in the older format, so the recording is saved as WebM without an error. The cost is that the fallback is silent: the user finds out from the `.webm` ending of the download.

@@ -184,7 +184,7 @@ Acceptance criteria for stories 22 to 24 are in `docs/user-stories.md`.
 
 **Risks**
 
-- Screen capture only works in desktop browsers, and the recording format (WebM) plays most reliably in Chrome-based browsers. Safari may refuse to play or record. The build targets desktop Chrome and Edge.
+- Screen capture only works in desktop browsers, and recording relies on features of Chrome-based browsers. (New recordings are MP4 since refinement batch 4, which plays everywhere; older ones are WebM, which plays most reliably in Chrome-based browsers.) Safari may refuse to record. The build targets desktop Chrome and Edge.
 - When the user switches to another window to record it, the recorder tab moves to the background and the browser slows down its drawing. The camera bubble is drawn by that tab, so it can freeze or stutter unless the drawing is driven by a background-safe timer. This is the main technical risk in the build.
 - Blur and custom backgrounds depend on a person-detection model running live on the camera feed. It adds a large dependency, needs a reasonably fast machine, and must be bundled with the app rather than fetched from the internet.
 - Long recordings are held in the browser's memory until the user stops, then sent to the local server in one go. Very long recordings (roughly over an hour) could exhaust memory.
@@ -201,7 +201,7 @@ Acceptance criteria for stories 22 to 24 are in `docs/user-stories.md`.
 
 ## 8. Open questions
 
-- Should recordings be offered as MP4 as well as WebM? WebM is what browsers produce without extra software; converting would add a heavy dependency. Not blocking: the build ships WebM.
+- Should recordings be offered as MP4 as well as WebM? WebM is what browsers produce without extra software; converting would add a heavy dependency. Answered in refinement batch 4: new recordings are saved as MP4 only, made by the app itself; see user story 15.
 - Should there be a maximum recording length to protect memory? Not blocking: the build sets no limit and logs the risk.
 
 ## 9. Success metrics

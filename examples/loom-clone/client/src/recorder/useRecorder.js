@@ -8,7 +8,8 @@ import { createTicker } from './ticker.js'
 import { createCompositor } from './compositor.js'
 import { mixAudio } from './audioMix.js'
 import { makeSeekable } from './makeSeekable.js'
-import { AUDIO_BITS_PER_SECOND, frameLimit, mimeTypes, videoBitsPerSecond } from './quality.js'
+import { fileNameFor, toMp4 } from './toMp4.js'
+import { AUDIO_BITS_PER_SECOND, frameLimit, mimeTypes, mp4MimeTypes, videoBitsPerSecond } from './quality.js'
 
 const COUNTDOWN_MS = 3000
 // When the countdown ends the page needs a moment to remove it from the screen.
@@ -45,6 +46,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   const [notice, setNotice] = useState('')
   const [wholeScreen, setWholeScreen] = useState(false)
   const [blobUrl, setBlobUrl] = useState(null)
+  const [blobName, setBlobName] = useState('recording.mp4') // the "Download instead" file name
 
   const phaseRef = useRef('setup')
   const takeRef = useRef(null) // everything belonging to the current take
@@ -85,7 +87,10 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     setNotice('')
     const limit = frameLimit(quality)
     const take = { mode, limit, chunks: [], pausedTotal: 0, pauseStart: null }
-    take.mimeTypes = mimeTypes({ quality, effectOn: mode !== 'screen' && background !== 'none' })
+    // New recordings are MP4. The WebM types are the fallback for a browser
+    // that cannot record MP4 itself.
+    take.mp4Types = mp4MimeTypes({ quality })
+    take.webmTypes = mimeTypes({ quality, effectOn: mode !== 'screen' && background !== 'none' })
     try {
       if (mode === 'camera') {
         // No screen is shared in this mode, so there is no screen picker.
@@ -208,25 +213,13 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
   // are in the file.
   function beginRecording(take) {
     try {
-      const mimeType = take.mimeTypes.find((type) => MediaRecorder.isTypeSupported(type))
-      // Spend data in proportion to the picture size: the compositor's canvas,
-      // the camera canvas, or the shared screen. If the size cannot be read,
-      // assume the largest the chosen quality allows.
-      const camera = take.mode === 'camera' ? getCameraCanvas() : null
-      const size = take.compositor ?? camera ?? take.stream.getVideoTracks()[0].getSettings()
-      const width = size.width || take.limit.width
-      const height = size.height || take.limit.height
-      take.recorder = new MediaRecorder(take.stream, {
-        ...(mimeType ? { mimeType } : {}),
-        videoBitsPerSecond: videoBitsPerSecond(width, height),
-        audioBitsPerSecond: AUDIO_BITS_PER_SECOND,
-      })
-      take.recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) take.chunks.push(event.data)
+      const mp4Type = take.mp4Types.find((type) => MediaRecorder.isTypeSupported(type))
+      try {
+        if (!mp4Type) throw new Error('no MP4 recording in this browser')
+        startRecorder(take, mp4Type)
+      } catch {
+        startRecorder(take, take.webmTypes.find((type) => MediaRecorder.isTypeSupported(type)))
       }
-      take.recorder.onstop = () => finish(take)
-      take.recorder.onerror = () => stop()
-      take.recorder.start(1000)
     } catch {
       release(take)
       takeRef.current = null
@@ -237,6 +230,51 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     take.recordStart = performance.now()
     setElapsedSeconds(0)
     setPhase('recording')
+  }
+
+  // Creates the browser's recorder for the take and starts it. Throws if the
+  // browser will not record in the given format.
+  function startRecorder(take, mimeType) {
+    // Spend data in proportion to the picture size: the compositor's canvas,
+    // the camera canvas, or the shared screen. If the size cannot be read,
+    // assume the largest the chosen quality allows.
+    const camera = take.mode === 'camera' ? getCameraCanvas() : null
+    const size = take.compositor ?? camera ?? take.stream.getVideoTracks()[0].getSettings()
+    const width = size.width || take.limit.width
+    const height = size.height || take.limit.height
+    const recorder = new MediaRecorder(take.stream, {
+      ...(mimeType ? { mimeType } : {}),
+      videoBitsPerSecond: videoBitsPerSecond(width, height),
+      audioBitsPerSecond: AUDIO_BITS_PER_SECOND,
+    })
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) take.chunks.push(event.data)
+    }
+    recorder.onstop = () => finish(take)
+    recorder.onerror = () => {
+      // The MP4 encoder gave up before producing anything (for example the
+      // picture is too large for it): carry on in WebM so the take is kept.
+      const isMp4 = Boolean(mimeType?.startsWith('video/mp4'))
+      if (isMp4 && take.chunks.length === 0 && !take.stopRequested && take.recorder === recorder) {
+        recorder.ondataavailable = recorder.onstop = recorder.onerror = null
+        try {
+          if (recorder.state !== 'inactive') recorder.stop()
+        } catch {
+          // already stopped
+        }
+        try {
+          startRecorder(take, take.webmTypes.find((type) => MediaRecorder.isTypeSupported(type)))
+          if (take.pauseStart !== null) take.recorder.pause()
+          return
+        } catch {
+          // fall through to the normal stop
+        }
+      }
+      stop()
+    }
+    recorder.start(1000)
+    take.recorder = recorder
+    take.isMp4 = Boolean(mimeType?.startsWith('video/mp4'))
   }
 
   function pause() {
@@ -285,10 +323,10 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     release(take)
     if (take.cancelled) return
 
-    const raw = new Blob(take.chunks, { type: 'video/webm' })
+    const raw = new Blob(take.chunks, { type: take.isMp4 ? 'video/mp4' : 'video/webm' })
     take.chunks = []
     take.durationSeconds = Math.max(0, Math.floor(take.finalMs / 1000))
-    take.blob = raw.size > 0 ? await makeSeekable(raw) : raw
+    take.blob = raw.size > 0 ? await prepareFile(raw) : raw
     if (take.cancelled) return // the page was left while the file was being prepared
     if (take.blob.size === 0) {
       takeRef.current = null
@@ -297,6 +335,15 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
       return
     }
     upload(take)
+  }
+
+  // The file that is saved: an MP4 whenever one can be made. If not, the take
+  // is kept as it was recorded, so it is never lost: a WebM is made seekable,
+  // and an MP4 straight from the browser is saved as it is.
+  async function prepareFile(raw) {
+    const mp4 = await toMp4(raw)
+    if (mp4) return mp4
+    return raw.type === 'video/webm' ? makeSeekable(raw) : raw
   }
 
   async function upload(take) {
@@ -318,6 +365,7 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
       // Keep the recording in the page so it is not lost.
       take.blobUrl ??= URL.createObjectURL(take.blob)
       setBlobUrl(take.blobUrl)
+      setBlobName(fileNameFor(take.blob))
       setSaveError(err.message)
       setPhase('save_failed')
     } finally {
@@ -365,5 +413,5 @@ export function useRecorder({ getCameraCanvas, getCameraStream, onSaved }) {
     [],
   )
 
-  return { phase, countdown, elapsedSeconds, error, saveError, notice, wholeScreen, blobUrl, start, pause, resume, stop, cancel, retrySave }
+  return { phase, countdown, elapsedSeconds, error, saveError, notice, wholeScreen, blobUrl, blobName, start, pause, resume, stop, cancel, retrySave }
 }

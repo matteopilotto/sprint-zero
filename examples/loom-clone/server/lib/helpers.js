@@ -1,4 +1,5 @@
 // Small shared helpers: timestamps, error responses, titles, and file locations.
+const fs = require('fs');
 const path = require('path');
 const { RECORDINGS_DIR } = require('../config');
 
@@ -21,9 +22,30 @@ function defaultTitle(date = new Date()) {
   return `Recording — ${day}, ${two(date.getHours())}:${two(date.getMinutes())}`;
 }
 
+// The file ending for a recording: "mp4" for an MP4, "webm" for everything else.
+// Used for the file on disk and for the name of a download.
+function extensionFor(mimeType) {
+  return mimeType === 'video/mp4' ? 'mp4' : 'webm';
+}
+
 // Where a recording's video lives on disk. Never sent to the client.
-function filePathFor(id) {
-  return path.join(RECORDINGS_DIR, `${id}.webm`);
+function filePathFor(id, mimeType) {
+  return path.join(RECORDINGS_DIR, `${id}.${extensionFor(mimeType)}`);
+}
+
+// The file for a saved recording. Everything saved before MP4 support is "<id>.webm"
+// whatever its type, so if the expected file is not there the other ending is tried.
+function storedFilePath(row) {
+  const expected = filePathFor(row.id, row.mime_type);
+  if (fs.existsSync(expected)) return expected;
+  const other = filePathFor(row.id, row.mime_type === 'video/mp4' ? 'video/webm' : 'video/mp4');
+  return fs.existsSync(other) ? other : expected;
+}
+
+// Deletes a recording's video, whichever ending it was saved with. Fine if it is already gone.
+function removeFiles(id) {
+  fs.rmSync(filePathFor(id, 'video/mp4'), { force: true });
+  fs.rmSync(filePathFor(id, 'video/webm'), { force: true });
 }
 
 // The public shape of a recording: no user_id and no disk path.
@@ -45,4 +67,14 @@ function toUser(row) {
   return { id: row.id, email: row.email, created_at: row.created_at };
 }
 
-module.exports = { timestamp, sendError, defaultTitle, filePathFor, toRecording, toUser };
+module.exports = {
+  timestamp,
+  sendError,
+  defaultTitle,
+  extensionFor,
+  filePathFor,
+  storedFilePath,
+  removeFiles,
+  toRecording,
+  toUser,
+};

@@ -6,13 +6,15 @@ const crypto = require('crypto');
 const fs = require('fs');
 const multer = require('multer');
 const { RECORDINGS_DIR, MAX_UPLOAD_BYTES } = require('../config');
-const { sendError, filePathFor } = require('./helpers');
+const { sendError, extensionFor, filePathFor, removeFiles } = require('./helpers');
 
 const storage = multer.diskStorage({
   destination: RECORDINGS_DIR,
   filename: (req, file, done) => {
     req.recordingId = crypto.randomUUID();
-    done(null, `${req.recordingId}.webm`);
+    // A first guess at the ending from what the browser says the file is.
+    // keepUpload() corrects it once the whole file is on disk.
+    done(null, `${req.recordingId}.${extensionFor(declaredType(file))}`);
   },
 });
 
@@ -20,7 +22,22 @@ const upload = multer({ storage, limits: { fileSize: MAX_UPLOAD_BYTES } }).singl
 
 // Deletes whatever this request wrote to disk. Safe to call when nothing was written.
 function removeUpload(req) {
-  if (req.recordingId) fs.rmSync(filePathFor(req.recordingId), { force: true });
+  if (req.recordingId) removeFiles(req.recordingId);
+}
+
+// Makes sure the uploaded file has the ending that matches its type:
+// "<id>.mp4" for video/mp4, "<id>.webm" otherwise.
+function keepUpload(req, mimeType) {
+  const finalPath = filePathFor(req.recordingId, mimeType);
+  if (finalPath !== req.file.path) {
+    fs.renameSync(req.file.path, finalPath);
+    req.file.path = finalPath;
+  }
+}
+
+// What the browser says the file is, without codec details.
+function declaredType(file) {
+  return String(file.mimetype || '').split(';')[0].trim().toLowerCase();
 }
 
 function receiveUpload(req, res, next) {
@@ -37,12 +54,12 @@ function receiveUpload(req, res, next) {
   });
 }
 
-// The content type to store, without codec details: "video/webm;codecs=vp9,opus"
-// becomes "video/webm". Browsers send the codec list with a comma in it, which the
+// The content type to store, without codec details: "video/mp4;codecs=avc1.42E01E,mp4a.40.2"
+// becomes "video/mp4" and "video/webm;codecs=vp9,opus" becomes "video/webm". Browsers send the codec list with a comma in it, which the
 // upload parser cannot read; it then reports "text/plain". When that happens we look
 // at the first bytes of the file itself to tell WebM from MP4.
 function mimeTypeOf(file) {
-  const declared = String(file.mimetype || '').split(';')[0].trim().toLowerCase();
+  const declared = declaredType(file);
   if (declared && declared !== 'text/plain') return declared;
 
   const start = Buffer.alloc(12);
@@ -54,4 +71,4 @@ function mimeTypeOf(file) {
   return declared || 'application/octet-stream';
 }
 
-module.exports = { receiveUpload, removeUpload, mimeTypeOf };
+module.exports = { receiveUpload, removeUpload, keepUpload, mimeTypeOf };

@@ -5,8 +5,16 @@ const fs = require('fs');
 const express = require('express');
 const db = require('../db');
 const { requireAuth, requireAuthForFile } = require('../lib/auth');
-const { receiveUpload, removeUpload, mimeTypeOf } = require('../lib/upload');
-const { timestamp, sendError, defaultTitle, filePathFor, toRecording } = require('../lib/helpers');
+const { receiveUpload, removeUpload, keepUpload, mimeTypeOf } = require('../lib/upload');
+const {
+  timestamp,
+  sendError,
+  defaultTitle,
+  extensionFor,
+  storedFilePath,
+  removeFiles,
+  toRecording,
+} = require('../lib/helpers');
 
 const router = express.Router();
 const MODES = ['screen', 'screen_camera', 'camera'];
@@ -60,12 +68,13 @@ router.post('/', requireAuth, receiveUpload, (req, res) => {
     mode: body.mode,
     duration_seconds: Number(String(body.duration_seconds).trim()),
     size_bytes: sizeBytes,
-    mime_type: mimeTypeOf(req.file), // "video/webm;codecs=vp9,opus" is stored as "video/webm"
+    mime_type: mimeTypeOf(req.file), // "video/mp4;codecs=avc1.42E01E,mp4a.40.2" is stored as "video/mp4"
     created_at: now,
     updated_at: now,
   };
 
   try {
+    keepUpload(req, row.mime_type); // saved as <id>.mp4 or <id>.webm to match its type
     db.prepare(
       `INSERT INTO recordings (id, user_id, title, mode, duration_seconds, size_bytes, mime_type, created_at, updated_at)
        VALUES (@id, @user_id, @title, @mode, @duration_seconds, @size_bytes, @mime_type, @created_at, @updated_at)`
@@ -103,13 +112,14 @@ router.delete('/:id', requireAuth, (req, res) => {
   if (!row) return notFound(res);
 
   db.prepare('DELETE FROM recordings WHERE id = ?').run(row.id);
-  fs.rmSync(filePathFor(row.id), { force: true }); // fine if the file is already gone
+  removeFiles(row.id); // fine if the file is already gone
   res.status(204).end();
 });
 
-// "<title>.webm" with characters that are unsafe in filenames replaced by "-".
-function downloadName(title) {
-  return `${title.replace(/[/\\:*?"<>|]/g, '-')}.webm`;
+// "<title>.mp4" or "<title>.webm", to match the recording's type, with characters
+// that are unsafe in filenames replaced by "-".
+function downloadName(row) {
+  return `${row.title.replace(/[/\\:*?"<>|]/g, '-')}.${extensionFor(row.mime_type)}`;
 }
 
 // A Content-Disposition header with a plain-ASCII name plus the real name.
@@ -130,12 +140,12 @@ function attachmentHeader(name) {
 // The video itself. sendFile handles Range requests (206) so the player can seek.
 router.get('/:id/file', requireAuthForFile, (req, res) => {
   const row = findOwned(req);
-  const filePath = row && filePathFor(row.id);
+  const filePath = row && storedFilePath(row);
   if (!row || !fs.existsSync(filePath)) return notFound(res);
 
   const headers = { 'Content-Type': row.mime_type };
   if (req.query.download === '1') {
-    headers['Content-Disposition'] = attachmentHeader(downloadName(row.title));
+    headers['Content-Disposition'] = attachmentHeader(downloadName(row));
   }
 
   res.sendFile(filePath, { headers, cacheControl: false }, (err) => {

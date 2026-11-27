@@ -5,7 +5,7 @@ import { formatDuration } from '../format.js'
 // What the recorder shows once "Start recording" has been clicked:
 // the countdown, then the timer overlay and controls, then the save status.
 export default function RecordingStage({ recorder, mode, floating, mediaKeysOn }) {
-  const { phase, countdown, elapsedSeconds, saveError, notice, wholeScreen, blobUrl } = recorder
+  const { phase, countdown, elapsedSeconds, saveError, notice, wholeScreen, blobUrl, blobName } = recorder
   const [confirmingCancel, setConfirmingCancel] = useState(false)
 
   // Shown when the browser offers a floating window and it is not open, either
@@ -56,7 +56,7 @@ export default function RecordingStage({ recorder, mode, floating, mediaKeysOn }
           <button className="button primary" onClick={recorder.retrySave}>
             Try again
           </button>
-          <a className="button" href={blobUrl} download="recording.webm">
+          <a className="button" href={blobUrl} download={blobName}>
             Download instead
           </a>
         </div>

@@ -26,7 +26,7 @@ The seed is safe to run again. It resets the demo account's recordings and leave
 | `routes/auth.js` | Sign up, log in, and "who am I". |
 | `routes/recordings.js` | List, read, save, rename, delete, and serve the video file. |
 | `lib/auth.js` | Creates login tokens and checks them on protected routes. |
-| `lib/upload.js` | Streams an uploaded video straight to disk (2 GB limit). |
+| `lib/upload.js` | Streams an uploaded video straight to disk (2 GB limit), as `<id>.mp4` or `<id>.webm` to match its type. |
 | `lib/helpers.js` | Timestamps, default titles, and the public shape of users and recordings. |
 | `seed.js` | Demo data. |
 | `fixtures/demo.webm` | A 5-second sample video (VP9 + Opus) the seed copies for each demo recording. |

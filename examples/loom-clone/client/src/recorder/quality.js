@@ -29,6 +29,15 @@ export function videoBitsPerSecond(width, height) {
   return Math.round(Math.min(20_000_000, Math.max(2_500_000, width * height * 2.4)))
 }
 
+// MP4 with H.264 video and AAC sound, which is what new recordings are saved
+// as. The first entry lets the browser pick the H.264 level for the picture
+// size; the second names one outright (5.1 covers 4K, 4.0 covers 1080p).
+export function mp4MimeTypes({ quality }) {
+  const level = quality === 'original' ? '640033' : '640028'
+  return ['video/mp4;codecs=avc1,mp4a.40.2', `video/mp4;codecs=avc1.${level},mp4a.40.2`]
+}
+
+// WebM, used only when the browser cannot record MP4 itself.
 // VP9 looks better at the same file size but is heavier to encode, so it is
 // used only when no camera effect is running and the picture is 1080p or less.
 export function mimeTypes({ quality, effectOn }) {
